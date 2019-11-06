@@ -8,7 +8,7 @@ SPLIT_DATA_DIR=./outdir/split_data/
 LATENT_ENCODINGS_FP=./outdir/image_encodings.csv
 IMAGE_METADATA=./data/histology_image_annotations.csv
 
-default: split
+default: convert split
 
 convert:
 	$(PY) ./scripts/preprocessing/svs2png.py \
@@ -17,9 +17,10 @@ convert:
 
 split:
 	$(PY) ./scripts/preprocessing/split_data.py \
+		'0.5,0.3,0.2' \
 		-i $(CONVERTED_PNG_IMAGES_DIR) \
 		-o $(SPLIT_DATA_DIR) \
-		'0.5,0.3,0.2'
+		
 
 autoencoder:
 	$(PY) ./scripts/analysis/autoencoder.py \

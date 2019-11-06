@@ -10,7 +10,7 @@ from pathlib import Path
 class img_data_type:
     valid=0
     train=1
-    testing=2
+    test=2
 
 def cli():
     parser = argparse.ArgumentParser()
@@ -25,10 +25,9 @@ def cli():
         type=Path
     )
     parser.add_argument(
-        "-o", "--outdir", dest="outdir"
+        "-o", "--outdir", dest="outdir", type=Path
     )
     args = parser.parse_args().__dict__
-    train_prop, test_prop, valid_prop = args.pop("train_test_valid_split")
     return args
 
 def main(train_test_valid_split: Tuple[float,float,float],
@@ -38,14 +37,18 @@ def main(train_test_valid_split: Tuple[float,float,float],
     train_dir = outdir/"train"
     test_dir = outdir/"test"
     valid_dir = outdir/"valid"
-    [p.mkdir(exists_ok=True, parents=True) for p in (train_dir, test_dir, valid_dir)]
-    weighted = [img_data_type.train * train_prop * 100] \
-        + [img_data_type.test * test_prop * 100] \
-        + [img_data_type.valid * valid_prop * 100]
+    [p.mkdir(exist_ok=True, parents=True) for p in (train_dir, test_dir, valid_dir)]
+    weighted = [img_data_type.train] * int(train_prop * 10000) \
+             + [img_data_type.test]  * int(test_prop  * 10000) \
+             + [img_data_type.valid] * int(valid_prop * 10000)
 
-    for img_fp in histology_dir.glob("*.png"):
+    for img_fp in list(histology_dir.glob("*.png")):
         d_type = random.choice(weighted)
-        c_outdir = {img_data_type.train: train_dir}[d_type]
+        c_outdir = {
+            img_data_type.train: train_dir,
+            img_data_type.test: test_dir,
+            img_data_type.valid: valid_dir,
+        }[d_type]
         img_fp.replace(c_outdir/img_fp.name)
 
 if __name__ == "__main__":
