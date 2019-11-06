@@ -1,3 +1,0 @@
-[submodule "keras-autoencoders"]
-	path = keras-autoencoders
-	url = https://github.com/snatch59/keras-autoencoders.git

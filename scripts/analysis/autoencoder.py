@@ -1,35 +1,32 @@
 from typing import Tuple
 
-import os, sys
-sys.path.append(os.path.join(os.getcwd(), "keras-autoencoder"))
-
 import argparse
+import csv
 from pathlib import Path
+
+from .autoencoder import convolutional
 
 def cli():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "train_test_valid_split",
-        help="train, test, validation split; formatted as comma-delimited string, e.g.; 0.5,0.3,0.2",
-        type=lambda s: [float(ss) for ss in s.split(",")]
-    )
-    parser.add_argument(
-        "-i", "--histology-dir",
-        dest="histology_dir",
-        type=Path
-    )
-    parser.add_argument(
-        "-o", "--outfp"
-    )
+    parser.add_argument("--train-dir", type=Path)
+    parser.add_argument("--test-dir", type=Path)
+    parser.add_argument("--valid-dir", type=Path)
+    parser.add_argument("-o", "--outfp")
     args = parser.parse_args().__dict__
-    train_prop, test_prop, valid_prop = args.pop("train_test_valid_split")
     return args
 
-def main(train_test_valid_split: Tuple[float,float,float],
-         histology_dir: Path,
-         outfp: Path):
-    train_prop, test_prop, valid_prop = train_test_valid_split
-    raise NotImplementedError
+def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path):
+    model, model_weights_fp, valid_dataset = convolutional.train_model(train_dir, test_dir, valid_dir)
+    latent_df = []
+    for img, img_fp in valid_dataset:
+        x, x_latent = model(img)
+        l1, l2, l3, l4 = x_latent
+        latent_df.append({"l1": l1, "l2": l2, "l3": l3, "l4":l4, "img_fp": img_fp})
+    
+    with outfp.open("w") as f:
+        w = csv.DictWriter(f, fieldnames=["l1", "l2", "l3", "l4", "img_fp"])
+        w.writeheader()
+        w.writerows(latent_df)
 
 if __name__ == "__main__":
     main(**cli())

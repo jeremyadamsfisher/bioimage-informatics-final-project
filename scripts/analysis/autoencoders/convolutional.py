@@ -1,120 +1,154 @@
-"""adapted from https://github.com/snatch59/keras-autoencoders.git"""
-
-from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
-from keras.models import Model
-from keras.datasets import mnist
-from keras.callbacks import TensorBoard
-from keras import backend as K
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import torchvision
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+from PIL import Image
+from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
+import random
 import numpy as np
-import matplotlib.pyplot as plt
-import pickle
 
-input_img = Input(shape=(28, 28, 1))    # adapt this if using 'channels_first' image data format
+SEED = 1234
 
-x = Conv2D(16, (3, 3), activation='relu', padding='same')(input_img)
-x = MaxPooling2D((2, 2), padding='same')(x)
-x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-x = MaxPooling2D((2, 2), padding='same')(x)
-x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-encoded = MaxPooling2D((2, 2), padding='same')(x)
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed(SEED)
+torch.backends.cudnn.deterministic = True
 
-# at this point the representation is (4, 4, 8), i.e. 128-dimensional
-
-x = Conv2D(8, (3, 3), activation='relu', padding='same')(encoded)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
-x = UpSampling2D((2, 2))(x)
-x = Conv2D(16, (3, 3), activation='relu')(x)
-x = UpSampling2D((2, 2))(x)
-decoded = Conv2D(1, (3, 3), activation='sigmoid', padding='same')(x)
-
-autoencoder = Model(input_img, decoded)
-autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-fileList = listOfFiles     
-
-def imageLoader(files, batch_size):
-
-    L = len(files)
-
-    #this line is just to make the generator infinite, keras needs that    
-    while True:
-
-        batch_start = 0
-        batch_end = batch_size
-
-        while batch_start < L:
-            limit = min(batch_end, L)
-            X = someMethodToLoadImages(files[batch_start:limit])
-            Y = someMethodToLoadTargets(files[batch_start:limit])
-
-            yield (X,Y) #a tuple with two numpy arrays with batch_size samples     
-
-            batch_start += batch_size   
-            batch_end += batch_size
+class HistologyDataset(torch.utils.data.Dataset):
+    def __init__(self, img_fps):
+        self.img_fps = img_fps
+    def __iter__(self):
+        for img_fp in self.img_fps:
+            yield Image.open(img_fp), img_fp
 
 
+def load_dataset(train_dir, test_dir, valid_dir):
+    datasets = {}
+    for data_type, data_path in [("train", train_dir),
+                                 ("test",  test_dir),
+                                 ("valid", valid_dir)]:
+        datasets[data_type] = DataLoader(
+            datasets.ImageFolder(
+                root=data_path,
+                transform=transforms.ToTensor(),
+            ),
+            batch_size=32,
+            num_workers=0,
+            shuffle=True
+        )
+    return datasets["train"], datasets["test"], datasets["valid"]
+    
+    
+def train(model, device, iterator, optimizer, criterion):
+    epoch_loss = 0
+    model.train()
+
+    for (x, _) in iterator:
+        x = x.to(device)
+        optimizer.zero_grad()
+        fx, _ = model(x)
+        loss = criterion(fx, x)
+        loss.backward()
+        optimizer.step()
+        epoch_loss += loss.item()
+        
+    return epoch_loss / len(iterator)
+    
+    
+def evaluate(model, device, iterator, criterion):
+    epoch_loss = 0
+    model.eval()
+    
+    with torch.no_grad():
+        for (x, _) in iterator:
+            x = x.to(device)
+            fx, _ = model(x)
+            loss = criterion(fx, x)
+            epoch_loss += loss.item()
+        
+    return epoch_loss / len(iterator)
 
 
+class Autoencoder(torch.nn.Module):
+    def __init__(self, layer_spec=((1, 16), (16, 8), (8, 1)), kern_size=5):
+        super(Autoencoder, self).__init__()
+
+        self.encoder_layers = []
+        self.decoder_layers = []
+        for in_features, out_features in layer_spec:
+            self.encoder_layers.append(
+                nn.Sequential(
+                    nn.Conv2d(in_features, out_features, kern_size),
+                    nn.ReLU()
+                )
+            )
+            self.decoder_layers.append(
+                nn.Sequential(
+                    torch.nn.ConvTranspose2d(out_features, in_features, kern_size),
+                    torch.nn.Sigmoid()
+                )
+            )
+
+        self.pooler   = nn.MaxPool2d(4, stride=4, return_indices=True)
+        self.unpooler = nn.MaxUnpool2d(4, stride=4)
+        
+        self.nn_layers = nn.ModuleList()
+        self.nn_layers.extend(self.encoder_layers)
+        self.nn_layers.extend(self.decoder_layers)
+
+    def forward(self, x):
+        pool_results = []
+        for encoder_layer in self.encoder_layers:
+            x = encoder_layer(x)
+            x_size_orig = x.size()
+            x, pooling_idxs = self.pooler(x)
+            pool_results.append((x_size_orig, pooling_idxs))
+        x_latent = x
+        for decoder_layer, (out_size, unpool_idx) in zip(reversed(self.decoder_layers),
+                                                         reversed(pool_results)):
+            x = self.unpooler(x, unpool_idx, output_size=out_size)
+            x = decoder_layer(x)
+        return x, x_latent
 
 
+def train_model(train_dir, test_dir, valid_dir):
+    train_iterator, test_iterator, valid_iterator = load_dataset(train_dir, test_dir, valid_dir)        
+                        
+    model = Autoencoder().to(device)
 
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=1e-2,
+        weight_decay=1e-5,
+    )
+    criterion = nn.MSELoss()
 
+    ### Training ###
+    EPOCHS = 50
+    SAVE_DIR = Path("./models")
+    SAVE_DIR.mkdir(exists_ok=True)
+    MODEL_SAVE_PATH = SAVE_DIR/"autoencoder.pt"
 
-# To train it, use the original MNIST digits with shape (samples, 3, 28, 28),
-# and just normalize pixel values between 0 and 1
+    best_valid_loss = float("inf")
 
-(x_train, _), (x_test, _) = mnist.load_data()
+    for epoch in range(EPOCHS):
+        train_loss = train(model, device, train_iterator, optimizer, criterion)
+        valid_loss = evaluate(model, device, valid_iterator, criterion)
+        print(f"| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Val. Loss: {valid_loss:.3f} |")
+        
+    # save model for later if desired
+    torch.save(model.state_dict(), MODEL_SAVE_PATH)
 
-x_train = x_train.astype('float32') / 255.
-x_test = x_test.astype('float32') / 255.
-x_train = np.reshape(x_train, (len(x_train), 28, 28, 1))    # adapt this if using 'channels_first' image data format
-x_test = np.reshape(x_test, (len(x_test), 28, 28, 1))       # adapt this if using 'channels_first' image data format
+    ### Testing ###
+    test_loss = evaluate(model, device, test_iterator, criterion)
+    print(f"| Test Loss: {test_loss:.3f} |")
 
-# open a terminal and start TensorBoard to read logs in the autoencoder subdirectory
-# tensorboard --logdir=autoencoder
-
-autoencoder.fit(x_train, x_train, epochs=50, batch_size=128, shuffle=True, validation_data=(x_test, x_test),
-                callbacks=[TensorBoard(log_dir='conv_autoencoder')], verbose=2)
-
-# take a look at the reconstructed digits
-decoded_imgs = autoencoder.predict(x_test)
-
-n = 10
-plt.figure(figsize=(10, 4), dpi=100)
-for i in range(n):
-    # display original
-    ax = plt.subplot(2, n, i + 1)
-    plt.imshow(x_test[i].reshape(28, 28))
-    plt.gray()
-    ax.set_axis_off()
-
-    # display reconstruction
-    ax = plt.subplot(2, n, i + n + 1)
-    plt.imshow(decoded_imgs[i].reshape(28, 28))
-    plt.gray()
-    ax.set_axis_off()
-
-plt.show()
-
-# take a look at the 128-dimensional encoded representation
-# these representations are 8x4x4, so we reshape them to 4x32 in order to be able to display them as grayscale images
-
-encoder = Model(input_img, encoded)
-encoded_imgs = encoder.predict(x_test)
-
-# save latent space features 128-d vector
-pickle.dump(encoded_imgs, open('conv_autoe_features.pickle', 'wb'))
-
-n = 10
-plt.figure(figsize=(10, 4), dpi=100)
-for i in range(n):
-    ax = plt.subplot(1, n, i + 1)
-    plt.imshow(encoded_imgs[i].reshape(4, 4 * 8).T)
-    plt.gray()
-    ax.set_axis_off()
-
-plt.show()
-
-K.clear_session()
+    return model, MODEL_SAVE_PATH, test_iterator
