@@ -25,3 +25,7 @@ survival:
 	$(PY) ./scripts/analysis/survival.py \
 		--encodings $(LATENT_ENCODINGS_FP) \
 		--metadata $(IMAGE_METADATA)
+
+
+push:
+	git push --recurse-submodules=on-demand
