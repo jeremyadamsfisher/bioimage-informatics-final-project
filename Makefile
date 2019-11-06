@@ -25,7 +25,8 @@ autoencoder:
 	$(PY) ./scripts/analysis/autoencoder.py \
 		--train-dir $(SPLIT_DATA_DIR)/train \
 		--test-dir $(SPLIT_DATA_DIR)/test \
-		--valid-dir $(SPLIT_DATA_DIR)/valid
+		--valid-dir $(SPLIT_DATA_DIR)/valid \
+		-o $(LATENT_ENCODINGS_FP)
 
 survival:
 	$(PY) ./scripts/analysis/survival.py \

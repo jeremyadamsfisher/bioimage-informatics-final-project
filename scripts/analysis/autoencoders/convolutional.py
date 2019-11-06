@@ -26,15 +26,21 @@ torch.backends.cudnn.deterministic = True
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class HistologyDataset(torch.utils.data.IterableDataset):
+class HistologyDataset(torch.utils.data.Dataset):
     def __init__(self, img_dir):
         self.img_fps = list(Path(img_dir).glob("*.png"))
-        self.preproc = transforms.ToTensor()
-    def __iter__(self):
-        for img_fp in self.img_fps:
-            yield self.preproc(Image.open(img_fp)), img_fp
+        self.preproc = transforms.Compose([
+            transforms.Grayscale(),
+            transforms.CenterCrop((256, 256)),
+            transforms.ToTensor(),
+        ])
+
     def __len__(self):
         return len(self.img_fps)
+
+    def __getitem__(self, idx):
+        img_fp = self.img_fps[idx]
+        return self.preproc(Image.open(img_fp)), img_fp.name
 
 
 def load_dataset(train_dir, test_dir, valid_dir):
@@ -44,8 +50,7 @@ def load_dataset(train_dir, test_dir, valid_dir):
                                  ("valid", valid_dir)]:
         datasets[data_type] = DataLoader(
             HistologyDataset(data_path),
-            batch_size=32,
-            num_workers=0,
+            batch_size=1
         )
     return datasets["train"], datasets["test"], datasets["valid"]
     
@@ -114,7 +119,7 @@ class Autoencoder(torch.nn.Module):
             x_size_orig = x.size()
             x, pooling_idxs = self.pooler(x)
             pool_results.append((x_size_orig, pooling_idxs))
-        x_latent = x
+        x_latent = x.reshape(-1)
         for decoder_layer, (out_size, unpool_idx) in zip(reversed(self.decoder_layers),
                                                          reversed(pool_results)):
             x = self.unpooler(x, unpool_idx, output_size=out_size)
@@ -135,7 +140,7 @@ def train_model(train_dir, test_dir, valid_dir):
     criterion = nn.MSELoss()
 
     ### Training ###
-    EPOCHS = 50
+    EPOCHS = 1
     SAVE_DIR = Path("./models")
     SAVE_DIR.mkdir(exist_ok=True)
     MODEL_SAVE_PATH = SAVE_DIR/"autoencoder.pt"
