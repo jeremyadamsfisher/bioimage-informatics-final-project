@@ -6,10 +6,17 @@ import openslide
 import os
 import PIL
 from PIL import Image
+import argparse
 
-source_dir = ''
-out_dir = ''
-scale_factor = 32
+parser = argparse.ArgumentParser()
+parser.add_argument("-s", "--source-dir", dest="source_dir", default="")
+parser.add_argument("-o", "--output-dir", dest="outdir", default="")
+parser.add_argument("--scale_factor", default=32, type=int)
+opt = parser.parse_args()
+
+source_dir = opt.source_dir
+out_dir = opt.outdir
+scale_factor = opt.scale_factor
 
 
 def svs2png(pool):
@@ -67,17 +74,9 @@ def mp_convert(file_paths):
         worker.join()
 
 
-def absoluteFilePaths(directory):
-    for dirpath, _, filenames in os.walk(directory):
-        for f in filenames:
-            yield os.path.abspath(os.path.join(dirpath, f))
+file_paths = []
+for root, dirs, files in os.walk(os.path.abspath(source_dir)):
+    for file in files:
+        file_paths.append(os.path.join(root, file))
 
-
-if __name__ == "__main__":
-
-    file_paths = []
-    for root, dirs, files in os.walk(os.path.abspath(source_dir)):
-        for file in files:
-            file_paths.append(os.path.join(root, file))
-
-    mp_convert(file_paths)
+mp_convert(file_paths)
