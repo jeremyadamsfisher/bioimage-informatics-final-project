@@ -21,11 +21,11 @@ split:
 		-i $(CONVERTED_PNG_IMAGES_DIR) \
 		-o $(SPLIT_DATA_DIR) \
 		
-
 autoencoder:
 	$(PY) ./scripts/analysis/autoencoder.py \
-		-i $(CONVERTED_PNG_IMAGES_DIR) \
-		-o $(LATENT_ENCODINGS_FP)
+		--train-dir $(SPLIT_DATA_DIR)/train \
+		--test-dir $(SPLIT_DATA_DIR)/test \
+		--valid-dir $(SPLIT_DATA_DIR)/valid
 
 survival:
 	$(PY) ./scripts/analysis/survival.py \

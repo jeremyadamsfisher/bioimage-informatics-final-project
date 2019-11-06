@@ -1,10 +1,13 @@
 from typing import Tuple
 
+import os, sys
+sys.path.append(os.path.join(os.getcwd(), "scripts", "analysis"))
+
 import argparse
 import csv
 from pathlib import Path
 
-from .autoencoder import convolutional
+from autoencoders import convolutional
 
 def cli():
     parser = argparse.ArgumentParser()

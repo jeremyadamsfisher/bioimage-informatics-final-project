@@ -5,11 +5,15 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import random
+import numpy as np
+
+from pathlib import Path
+
 from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-import random
-import numpy as np
+
 
 SEED = 1234
 
@@ -22,12 +26,15 @@ torch.backends.cudnn.deterministic = True
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class HistologyDataset(torch.utils.data.Dataset):
-    def __init__(self, img_fps):
-        self.img_fps = img_fps
+class HistologyDataset(torch.utils.data.IterableDataset):
+    def __init__(self, img_dir):
+        self.img_fps = list(Path(img_dir).glob("*.png"))
+        self.preproc = transforms.ToTensor()
     def __iter__(self):
         for img_fp in self.img_fps:
-            yield Image.open(img_fp), img_fp
+            yield self.preproc(Image.open(img_fp)), img_fp
+    def __len__(self):
+        return len(self.img_fps)
 
 
 def load_dataset(train_dir, test_dir, valid_dir):
@@ -36,13 +43,9 @@ def load_dataset(train_dir, test_dir, valid_dir):
                                  ("test",  test_dir),
                                  ("valid", valid_dir)]:
         datasets[data_type] = DataLoader(
-            datasets.ImageFolder(
-                root=data_path,
-                transform=transforms.ToTensor(),
-            ),
+            HistologyDataset(data_path),
             batch_size=32,
             num_workers=0,
-            shuffle=True
         )
     return datasets["train"], datasets["test"], datasets["valid"]
     
@@ -134,7 +137,7 @@ def train_model(train_dir, test_dir, valid_dir):
     ### Training ###
     EPOCHS = 50
     SAVE_DIR = Path("./models")
-    SAVE_DIR.mkdir(exists_ok=True)
+    SAVE_DIR.mkdir(exist_ok=True)
     MODEL_SAVE_PATH = SAVE_DIR/"autoencoder.pt"
 
     best_valid_loss = float("inf")

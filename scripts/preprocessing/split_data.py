@@ -38,6 +38,7 @@ def main(train_test_valid_split: Tuple[float,float,float],
     test_dir = outdir/"test"
     valid_dir = outdir/"valid"
     [p.mkdir(exist_ok=True, parents=True) for p in (train_dir, test_dir, valid_dir)]
+    
     weighted = [img_data_type.train] * int(train_prop * 10000) \
              + [img_data_type.test]  * int(test_prop  * 10000) \
              + [img_data_type.valid] * int(valid_prop * 10000)

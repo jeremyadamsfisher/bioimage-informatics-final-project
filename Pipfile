@@ -9,6 +9,8 @@ verify_ssl = true
 openslide-python = "*"
 Pillow = "*"
 numpy = "*"
+torch = "*"
+torchvision = "*"
 
 [requires]
 python_version = "3.7"
