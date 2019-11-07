@@ -7,6 +7,8 @@ import argparse
 import random
 from pathlib import Path
 
+random.seed(42)
+
 class img_data_type:
     valid=0
     train=1
