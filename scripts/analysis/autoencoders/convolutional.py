@@ -127,7 +127,7 @@ class Autoencoder(torch.nn.Module):
         return x, x_latent
 
 
-def train_model(train_dir, test_dir, valid_dir):
+def train_model(train_dir, test_dir, valid_dir, epochs):
     train_iterator, test_iterator, valid_iterator = load_dataset(train_dir, test_dir, valid_dir)        
                         
     model = Autoencoder().to(device)
@@ -140,14 +140,13 @@ def train_model(train_dir, test_dir, valid_dir):
     criterion = nn.MSELoss()
 
     ### Training ###
-    EPOCHS = 1
     SAVE_DIR = Path("./models")
     SAVE_DIR.mkdir(exist_ok=True)
     MODEL_SAVE_PATH = SAVE_DIR/"autoencoder.pt"
 
     best_valid_loss = float("inf")
 
-    for epoch in range(EPOCHS):
+    for epoch in range(epochs):
         train_loss = train(model, device, train_iterator, optimizer, criterion)
         valid_loss = evaluate(model, device, valid_iterator, criterion)
         print(f"| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Val. Loss: {valid_loss:.3f} |")

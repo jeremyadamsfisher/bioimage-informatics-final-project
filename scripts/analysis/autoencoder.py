@@ -14,12 +14,13 @@ def cli():
     parser.add_argument("--train-dir", type=Path, required=True)
     parser.add_argument("--test-dir", type=Path, required=True)
     parser.add_argument("--valid-dir", type=Path, required=True)
+    parser.add_argument("--epochs", help="number of epochs to train", type=int, default=100)
     parser.add_argument("-o", "--outfp", type=Path, required=True)
     args = parser.parse_args().__dict__
     return args
 
-def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path):
-    model, model_weights_fp, valid_dataset = convolutional.train_model(train_dir, test_dir, valid_dir)
+def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
+    model, model_weights_fp, valid_dataset = convolutional.train_model(train_dir, test_dir, valid_dir, epochs)
     latent_df = []
     for img, (img_fp, *_) in valid_dataset:
         x, x_latent = model(img)
