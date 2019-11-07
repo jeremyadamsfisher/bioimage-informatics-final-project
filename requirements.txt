@@ -1,3 +1,6 @@
-# requirements for preprocessing
-Pillow
 openslide-python
+Pillow
+numpy
+torch
+torchvision
+pandas
