@@ -12,7 +12,7 @@ SPLIT_DATA_DIR=./outdir/split_data
 LATENT_ENCODINGS_FP=./outdir/image_encodings.csv
 IMAGE_METADATA=./data/histology_image_annotations.csv
 SUPER_DATASET_FP=./outdir/dataset.csv
-N_EPOCHS
+N_EPOCHS=100
 
 pipeline: split autoencoder superdataset
 
