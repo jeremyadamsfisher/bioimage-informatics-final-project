@@ -59,6 +59,7 @@ autoencoder:
 		--train-dir $(SPLIT_DATA_DIR)/train \
 		--test-dir $(SPLIT_DATA_DIR)/test \
 		--valid-dir $(SPLIT_DATA_DIR)/valid \
+		--epochs $(N_EPOCHS) \
 		-o $(LATENT_ENCODINGS_FP)
 
 superdataset:
