@@ -15,7 +15,7 @@ print("Compressing...")
 img_compressed_f = Path("")
 with ZipFile(img_compressed_f, "w") as zip:
     for f in opt.img_dir.glob("*.png"):
-        zip.write(f)
+        zip.write(str(f))
 print("Done compressing.")
 
 print("Uploading...")
