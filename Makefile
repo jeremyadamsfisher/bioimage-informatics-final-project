@@ -4,6 +4,8 @@ PY=$(BIOIMAGE_PY_PATH)
 
 DOCKER_IMG_NAME=bioimage_informatics_final_project_runtime
 
+BUCKET_NAME_GLCOUD=grim-reaper-initial-dataset
+
 RAW_IMAGES_DIR=/Users/jeremyfisher/Downloads/TCGA_DATA/
 CONVERTED_PNG_IMAGES_DIR=./outdir/converted_images/
 SPLIT_DATA_DIR=./outdir/split_data
@@ -12,7 +14,9 @@ IMAGE_METADATA=./data/histology_image_annotations.csv
 SUPER_DATASET_FP=./outdir/dataset.csv
 N_EPOCHS
 
-pipeline: convert split autoencoder superdataset
+pipeline: split autoencoder superdataset
+
+preprocess: convert upload_to_bucket
 
 convert:
 	# convert SVS images into PNGs for ingest into PyTorch
@@ -21,6 +25,15 @@ convert:
 	$(PY) ./scripts/preprocessing/svs2png.py \
 		-s $(RAW_IMAGES_DIR) \
 		-o $(CONVERTED_PNG_IMAGES_DIR)
+
+upload_to_bucket:
+	$(PY) ./scripts/preprocessing/upload.py \
+		--bucket-name $(BUCKET_NAME_GLCOUD) \
+		--img-dir $(CONVERTED_PNG_IMAGES_DIR)
+
+
+download_from_bucket:
+	echo 'not implemented'
 
 split:
 	# data needs to be split into training, validation and
