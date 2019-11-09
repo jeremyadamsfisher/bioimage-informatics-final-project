@@ -12,14 +12,14 @@ storage_client = storage.Client()
 bucket = storage_client.get_bucket(opt.bucket_name)
 
 print("Compressing...")
-img_compressed_f = Path("")
+img_compressed_f = Path("imgs.zip")
 with ZipFile(img_compressed_f, "w") as zip:
     for f in opt.img_dir.glob("*.png"):
         zip.write(str(f))
 print("Done compressing.")
 
 print("Uploading...")
-bucket.blob(img_compressed_f.name).upload_from_filename(img_compressed_f)
+bucket.blob(img_compressed_f.name).upload_from_filename(str(img_compressed_f))
 print("Done uploading.")
 
 # clean up
