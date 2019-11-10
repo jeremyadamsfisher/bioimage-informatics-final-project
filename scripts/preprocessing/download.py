@@ -64,7 +64,7 @@ with open(opt.manifest_fp) as f:
                 *[img["id"] for img in imgs]
             ], cwd=t_dir)
             new_images = list(Path(t_dir).glob("*/*.svs"))
-            print(f"Converting {' '.join(new_images)}")
+            print(f"Converting {' '.join(map(str, new_images))}")
             for img_fp in new_images:
                 img = svs2scaled_PIL(img_fp, 16)
                 img.save(img_fp.with_suffix("png"))
