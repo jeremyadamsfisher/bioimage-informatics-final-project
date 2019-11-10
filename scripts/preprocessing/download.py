@@ -33,7 +33,7 @@ def svs2scaled_PIL(slide_path, scale_factor):
       Tuple consisting of scaled-down PIL image, original width, original height, new width, and new height.
     """
 
-    slide = openslide.open_slide(slide_path)
+    slide = openslide.open_slide(str(slide_path))
 
     og_width, og_height = slide.dimensions
     ds_width = math.floor(og_width / scale_factor)
@@ -63,6 +63,8 @@ with open(opt.manifest_fp) as f:
                 "download",
                 *[img["id"] for img in imgs]
             ], cwd=t_dir)
-            for img_fp in Path(t_dir).glob("*/*.svs"):
+            new_images = list(Path(t_dir).glob("*/*.svs"))
+            print(f"Converting {' '.join(new_images)}")
+            for img_fp in new_images:
                 img = svs2scaled_PIL(img_fp, 16)
                 img.save(img_fp.with_suffix("png"))
