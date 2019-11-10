@@ -57,7 +57,7 @@ with open(opt.manifest_fp) as f:
     chunk_size = 5
     for i, imgs in enumerate(chunks(manifest, chunk_size)):
         with tempfile.TemporaryDirectory() as t_dir:
-            print(f"Downloading image ({i+1:,} to {i+chunk_size+1:,}) of {len(manifest):,} to {t_dir}...")
+            print(f"Downloading images ({(i*chunk_size)+1:,} to {((i+1)*chunk_size)+1:,}) of {len(manifest):,} to {t_dir}...")
             subprocess.check_output([
                 "gdc-client",
                 "download",
