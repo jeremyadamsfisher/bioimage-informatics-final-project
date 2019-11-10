@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.getcwd(), "scripts", "analysis"))
 import argparse
 import csv
 import torch
+import torchvision.transforms.functional as TF
 from pathlib import Path
 
 from autoencoders import convolutional
@@ -20,8 +21,28 @@ def cli():
     args = parser.parse_args().__dict__
     return args
 
+
+
+def preprocess_histology_img(img) -> torch.Tensor:
+    """regardless of the autoencoder, we preprocess images
+    the same way"""
+
+    bg_color = (244,244,244)
+    resize_to = (2**10, 2**10)
+    height, width = img.size
+    padding = abs(height - width)
+    if height > width:
+        img = TF.pad(img, (0,padding), fill=bg_color)
+    elif height < width:
+        img = TF.pad(img, (padding,0), fill=bg_color)
+    img = TF.resize(img, resize_to)
+
+    return TF.to_tensor(img)
+
 def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
-    model, model_weights_fp, test_dataset = convolutional.train_model(train_dir, test_dir, valid_dir, epochs)
+    model, model_weights_fp, test_dataset = convolutional.train_model(
+        train_dir, test_dir, valid_dir, epochs, preprocess_histology_img
+    )
     latent_df = []
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for img, (img_fp, *_) in test_dataset:

@@ -27,13 +27,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class HistologyDataset(torch.utils.data.Dataset):
-    def __init__(self, img_dir):
+    def __init__(self, img_dir, preprocess_callable):
         self.img_fps = list(Path(img_dir).glob("*.png"))
-        self.preproc = transforms.Compose([
-            transforms.Grayscale(),
-            transforms.CenterCrop((256, 256)),
-            transforms.ToTensor(),
-        ])
+        self.preproc = preprocess_callable
 
     def __len__(self):
         return len(self.img_fps)
@@ -43,13 +39,13 @@ class HistologyDataset(torch.utils.data.Dataset):
         return self.preproc(Image.open(img_fp)), img_fp.name
 
 
-def load_dataset(train_dir, test_dir, valid_dir):
+def load_dataset(train_dir, test_dir, valid_dir, preprocess_callable):
     datasets = {}
     for data_type, data_path in [("train", train_dir),
                                  ("test",  test_dir),
                                  ("valid", valid_dir)]:
         datasets[data_type] = DataLoader(
-            HistologyDataset(data_path),
+            HistologyDataset(data_path, preprocess_callable),
             batch_size=1
         )
     return datasets["train"], datasets["test"], datasets["valid"]
@@ -86,7 +82,7 @@ def evaluate(model, device, iterator, criterion):
 
 
 class Autoencoder(torch.nn.Module):
-    def __init__(self, layer_spec=((1, 16), (16, 8), (8, 1)), kern_size=5):
+    def __init__(self, layer_spec=((3, 16), (16, 8), (8, 3)), kern_size=5):
         super(Autoencoder, self).__init__()
 
         self.encoder_layers = []
@@ -127,8 +123,8 @@ class Autoencoder(torch.nn.Module):
         return x, x_latent
 
 
-def train_model(train_dir, test_dir, valid_dir, epochs):
-    train_iterator, test_iterator, valid_iterator = load_dataset(train_dir, test_dir, valid_dir)        
+def train_model(train_dir, test_dir, valid_dir, epochs, preprocess_callable):
+    train_iterator, test_iterator, valid_iterator = load_dataset(train_dir, test_dir, valid_dir, preprocess_callable)        
                         
     model = Autoencoder().to(device)
 
