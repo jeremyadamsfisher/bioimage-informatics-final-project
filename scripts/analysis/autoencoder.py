@@ -22,8 +22,9 @@ def cli():
 def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
     model, model_weights_fp, valid_dataset = convolutional.train_model(train_dir, test_dir, valid_dir, epochs)
     latent_df = []
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for img, (img_fp, *_) in valid_dataset:
-        x, x_latent = model(img)
+        x, x_latent = model(img.to(device))
         l1, l2, l3, l4 = tuple(x_latent.detach().numpy())
         latent_df.append({"l1": l1, "l2": l2, "l3": l3, "l4":l4, "img_fp": str(img_fp)})
     
