@@ -25,7 +25,6 @@ pipeline: download_from_bucket split autoencoder superdataset
 convert:
 	# convert SVS images into PNGs for ingest into PyTorch
 	# also, filter out images deriving from low quality biopsys
-	ls $(RAW_IMAGES_DIR) && \
 	$(PY) ./scripts/preprocessing/svs2png.py \
 		-s $(RAW_IMAGES_DIR) \
 		-o $(CONVERTED_PNG_IMAGES_DIR)
@@ -39,13 +38,12 @@ upload_to_bucket:
 download_from_bucket:
 	rm -rf $(CONVERTED_PNG_IMAGES_DIR) \
 	&& gsutil cp $(IMGS_PATH_GCP) . \
-	&& unzip *.zip \
+	&& unzip -q *.zip \
 	&& rm *.zip
 
 split:
 	# data needs to be split into training, validation and
 	# testing; test set will be used for survival analysis
-	ls $(CONVERTED_PNG_IMAGES_DIR) && \
 	$(PY) ./scripts/preprocessing/split_data.py \
 		'0.33,0.33,0.33' \
 		-i $(CONVERTED_PNG_IMAGES_DIR) \
