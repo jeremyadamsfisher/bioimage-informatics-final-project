@@ -7,6 +7,7 @@ DOCKER_IMG_NAME=bioimage_informatics_final_project_runtime
 BUCKET_NAME_GLCOUD=grim-reaper-initial-dataset
 IMGS_PATH_GCP=gs://grim-reaper-initial-dataset/imgs.zip
 
+MANIFEST_FP=gdc_manifest.2019-11-07.txt
 RAW_IMAGES_DIR=/Users/jeremyfisher/Downloads/TCGA_DATA/
 CONVERTED_PNG_IMAGES_DIR=./outdir/converted_images/
 SPLIT_DATA_DIR=./outdir/split_data
@@ -18,22 +19,21 @@ N_EPOCHS=100
 default:
 	echo "run either preprocess or pipeline!"
 
-preprocess: convert upload_to_bucket
+preprocess: download_and_convert_from_tcga upload_to_bucket
 
 pipeline: download_from_bucket split autoencoder superdataset
 
-convert:
-	# convert SVS images into PNGs for ingest into PyTorch
-	# also, filter out images deriving from low quality biopsys
-	$(PY) ./scripts/preprocessing/svs2png.py \
-		-s $(RAW_IMAGES_DIR) \
-		-o $(CONVERTED_PNG_IMAGES_DIR)
+download_and_convert_from_tcga:
+	# download from TCGA and convert SVS images into PNGs for ingest
+	# into PyTorch
+	$(PY) ./scripts/preprocessing/download.py \
+		--manifest-fp $(MANIFEST_FP) \
+		--outdir $(CONVERTED_PNG_IMAGES_DIR)
 
 upload_to_bucket:
 	$(PY) ./scripts/preprocessing/upload.py \
 		--bucket-name $(BUCKET_NAME_GLCOUD) \
 		--img-dir $(CONVERTED_PNG_IMAGES_DIR)
-
 
 download_from_bucket:
 	rm -rf $(CONVERTED_PNG_IMAGES_DIR) \
