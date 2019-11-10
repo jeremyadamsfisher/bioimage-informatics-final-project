@@ -5,6 +5,7 @@ sys.path.append(os.path.join(os.getcwd(), "scripts", "analysis"))
 
 import argparse
 import csv
+import torch
 from pathlib import Path
 
 from autoencoders import convolutional

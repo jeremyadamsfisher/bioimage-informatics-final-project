@@ -52,7 +52,6 @@ split:
 autoencoder:
 	# find latent representation space, extract latent encodings
 	# from test dataset
-	ls $(SPLIT_DATA_DIR)/* && \
 	$(PY) ./scripts/analysis/autoencoder.py \
 		--train-dir $(SPLIT_DATA_DIR)/train \
 		--test-dir $(SPLIT_DATA_DIR)/test \
