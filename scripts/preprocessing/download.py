@@ -67,4 +67,4 @@ with open(opt.manifest_fp) as f:
             print(f"Converting {' '.join(map(str, new_images))}")
             for img_fp in new_images:
                 img = svs2scaled_PIL(img_fp, 16)
-                img.save(img_fp.with_suffix(".png"))
+                img.save(opt.outdir/f"{img_fp.stem}.png")
