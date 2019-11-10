@@ -47,8 +47,11 @@ def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for img, (img_fp, *_) in test_dataset:
         x, x_latent = model(img.to(device))
-        l1, l2, l3, l4 = tuple(x_latent.cpu().detach().numpy())
-        latent_df.append({"l1": l1, "l2": l2, "l3": l3, "l4":l4, "img_fp": str(img_fp)})
+        x_latent = list(x_latent.cpu().detach().numpy())
+        latent_df.append({
+            "img_fp": str(img_fp),
+            **{f"l{i}": latent_dim for i, latent_dim in enumerate(x_latent)}
+        })
     
     with open(outfp, "w") as f:
         w = csv.DictWriter(f, fieldnames=["l1", "l2", "l3", "l4", "img_fp"])
