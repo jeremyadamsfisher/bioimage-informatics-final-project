@@ -14,8 +14,10 @@ bucket = storage_client.get_bucket(opt.bucket_name)
 print("Compressing...")
 img_compressed_f = Path("imgs.zip")
 with ZipFile(img_compressed_f, "w") as zip:
-    for f in opt.img_dir.glob("*.png"):
-        zip.write(str(f))
+    imgs = list(opt.img_dir.glob("*.png"))
+    for i, fp in enumerate(imgs):
+        print(f"...progress=({i}/{len(imgs)})")
+        zip.write(str(fp))
 print("Done compressing.")
 
 print("Uploading...")

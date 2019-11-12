@@ -66,5 +66,5 @@ with open(opt.manifest_fp) as f:
             new_images = list(Path(t_dir).glob("*/*.svs"))
             print(f"Converting {' '.join(map(str, new_images))}")
             for img_fp in new_images:
-                img = svs2scaled_PIL(img_fp, 16)
+                img = svs2scaled_PIL(img_fp, 32)
                 img.save(opt.outdir/f"{img_fp.stem}.png")
