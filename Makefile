@@ -31,9 +31,9 @@ download_and_convert_from_tcga:
 		--outdir $(CONVERTED_PNG_IMAGES_DIR)
 
 upload_to_bucket:
-	$(PY) ./scripts/preprocessing/upload.py \
-		--bucket-name $(BUCKET_NAME_GLCOUD) \
-		--img-dir $(CONVERTED_PNG_IMAGES_DIR)
+	zip -r imgs.zip $(CONVERTED_PNG_IMAGES_DIR) \
+	&& gsutil cp imgs.zip $(IMGS_PATH_GCP) \
+	&& rm rm *.zip
 
 download_from_bucket:
 	rm -rf $(CONVERTED_PNG_IMAGES_DIR) \

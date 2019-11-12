@@ -82,7 +82,7 @@ def evaluate(model, device, iterator, criterion):
 
 
 class Autoencoder(torch.nn.Module):
-    def __init__(self, layer_spec=((3, 16), (16, 8), (8, 3)), kern_size=5):
+    def __init__(self, layer_spec=((3, 8), (8, 3), (3, 1)), kern_size=5):
         super(Autoencoder, self).__init__()
 
         self.encoder_layers = []

@@ -54,7 +54,8 @@ def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
         })
     
     with open(outfp, "w") as f:
-        w = csv.DictWriter(f, fieldnames=["l1", "l2", "l3", "l4", "img_fp"])
+        fieldnames = sorted(latent_df[0].keys())
+        w = csv.DictWriter(f, fieldnames=fieldnames)
         w.writeheader()
         w.writerows(latent_df)
 
