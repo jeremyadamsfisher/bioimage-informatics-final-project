@@ -27,7 +27,7 @@ def determine_preprocessing(dataset_dirs: List[Path]):
     on the whole dataset"""
     pad_max = float("-inf")
     img_fps = sum(
-        (list(dataset_dir.glob("*.png") for dataset_dir in dataset_dirs)), []
+        (list(dataset_dir.glob("*.png")) for dataset_dir in dataset_dirs), []
     )
     for i, img_fp in enumerate(img_fps):
         print(f"\t{i+1}/{len(img_fps)}")
