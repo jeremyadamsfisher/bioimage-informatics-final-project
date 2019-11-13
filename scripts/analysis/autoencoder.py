@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 import os, sys
 sys.path.append(os.path.join(os.getcwd(), "scripts", "analysis"))
@@ -8,6 +8,7 @@ import csv
 import torch
 import torchvision.transforms.functional as TF
 from pathlib import Path
+from PIL import Image
 
 from autoencoders import convolutional
 
@@ -21,27 +22,33 @@ def cli():
     args = parser.parse_args().__dict__
     return args
 
-
-
-def preprocess_histology_img(img) -> torch.Tensor:
-    """regardless of the autoencoder, we preprocess images
-    the same way"""
+def determine_preprocessing(dataset_dirs: List[Path]):
+    """to maintain scale, we pad the smaller images based
+    on the whole dataset"""
+    pad_max = float("-inf")
+    for dataset_dir in dataset_dirs:
+        for img_fp in dataset_dir.glob("*.png"):
+            x, y = Image.open(img_fp).size
+            pad_max = max((pad_max, x, y))
 
     bg_color = (244,244,244)
-    resize_to = (2**10, 2**10)
-    height, width = img.size
-    padding = abs(height - width)
-    if height > width:
-        img = TF.pad(img, (0,padding), fill=bg_color)
-    elif height < width:
-        img = TF.pad(img, (padding,0), fill=bg_color)
-    img = TF.resize(img, resize_to)
+    resize_to = (512, 512)
 
-    return TF.to_tensor(img)
+    def preprocess_histology_img(img) -> torch.Tensor:
+        """regardless of the autoencoder, we preprocess images
+        the same way"""
+        height, width = img.size
+        img = TF.pad(img, (pad_max - height,pad_max - width), fill=bg_color)
+        img = TF.resize(img, resize_to)
+
+        return TF.to_tensor(img)
+
+    return preprocess_histology_img
 
 def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
+    preprocessing = determine_preprocessing([train_dir, test_dir, valid_dir])
     model, model_weights_fp, test_dataset = convolutional.train_model(
-        train_dir, test_dir, valid_dir, epochs, preprocess_histology_img
+        train_dir, test_dir, valid_dir, epochs, preprocessing
     )
     latent_df = []
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
