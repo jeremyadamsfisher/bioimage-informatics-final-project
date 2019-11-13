@@ -55,7 +55,9 @@ def train(model, device, iterator, optimizer, criterion):
     epoch_loss = 0
     model.train()
 
-    for (x, _) in iterator:
+    for i, (x, _) in enumerate(iterator):
+        if i % 10 == 0:
+            print(f"\t{i}/{len(iterator)}...")
         x = x.to(device)
         optimizer.zero_grad()
         fx, _ = model(x)
@@ -145,6 +147,7 @@ def train_model(train_dir, test_dir, valid_dir, epochs, preprocess_callable):
     best_valid_loss = float("inf")
 
     for epoch in range(epochs):
+        print(f"starting epoch {epoch+1}...")
         train_loss = train(model, device, train_iterator, optimizer, criterion)
         valid_loss = evaluate(model, device, valid_iterator, criterion)
         print(f"| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Val. Loss: {valid_loss:.3f} |")
