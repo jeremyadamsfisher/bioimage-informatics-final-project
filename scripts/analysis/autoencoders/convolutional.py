@@ -126,6 +126,7 @@ class Autoencoder(torch.nn.Module):
 def train_model(train_dir, test_dir, valid_dir, epochs, preprocess_callable):
     train_iterator, test_iterator, valid_iterator = load_dataset(train_dir, test_dir, valid_dir, preprocess_callable)        
                         
+    print("Initializing model")
     model = Autoencoder().to(device)
 
     optimizer = torch.optim.Adam(
@@ -134,6 +135,7 @@ def train_model(train_dir, test_dir, valid_dir, epochs, preprocess_callable):
         weight_decay=1e-5,
     )
     criterion = nn.MSELoss()
+    print("...done")
 
     ### Training ###
     SAVE_DIR = Path("./models")

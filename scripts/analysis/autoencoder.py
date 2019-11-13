@@ -30,7 +30,8 @@ def determine_preprocessing(dataset_dirs: List[Path]):
         (list(dataset_dir.glob("*.png")) for dataset_dir in dataset_dirs), []
     )
     for i, img_fp in enumerate(img_fps):
-        print(f"\t{i+1}/{len(img_fps)}")
+        if 1 % 10 == 0:
+            print(f"\t{i+1}/{len(img_fps)}")
         x, y = Image.open(img_fp).size
         pad_max = max((pad_max, x, y))
 
