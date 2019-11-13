@@ -26,10 +26,13 @@ def determine_preprocessing(dataset_dirs: List[Path]):
     """to maintain scale, we pad the smaller images based
     on the whole dataset"""
     pad_max = float("-inf")
-    for dataset_dir in dataset_dirs:
-        for img_fp in dataset_dir.glob("*.png"):
-            x, y = Image.open(img_fp).size
-            pad_max = max((pad_max, x, y))
+    img_fps = sum(
+        (list(dataset_dir.glob("*.png") for dataset_dir in dataset_dirs)), []
+    )
+    for i, img_fp in enumerate(img_fps):
+        print(f"\t{i+1}/{len(img_fps)}")
+        x, y = Image.open(img_fp).size
+        pad_max = max((pad_max, x, y))
 
     bg_color = (244,244,244)
     resize_to = (512, 512)
@@ -46,10 +49,17 @@ def determine_preprocessing(dataset_dirs: List[Path]):
     return preprocess_histology_img
 
 def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
+    print("Running a preprocessing scan...")
     preprocessing = determine_preprocessing([train_dir, test_dir, valid_dir])
+    print("...done")
+
+    print("Training...")
     model, model_weights_fp, test_dataset = convolutional.train_model(
         train_dir, test_dir, valid_dir, epochs, preprocessing
     )
+    print("...done")
+
+    print("Running inference")
     latent_df = []
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for img, (img_fp, *_) in test_dataset:
@@ -59,12 +69,12 @@ def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
             "img_fp": str(img_fp),
             **{f"l{i}": latent_dim for i, latent_dim in enumerate(x_latent)}
         })
-    
     with open(outfp, "w") as f:
         fieldnames = sorted(latent_df[0].keys())
         w = csv.DictWriter(f, fieldnames=fieldnames)
         w.writeheader()
         w.writerows(latent_df)
+    print("...done")
 
 if __name__ == "__main__":
     main(**cli())
