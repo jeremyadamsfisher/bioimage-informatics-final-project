@@ -26,14 +26,15 @@ def determine_preprocessing(dataset_dirs: List[Path]):
     """to maintain scale, we pad the smaller images based
     on the whole dataset"""
     pad_max = float("-inf")
-    img_fps = sum(
-        (list(dataset_dir.glob("*.png")) for dataset_dir in dataset_dirs), []
-    )
+    img_fps = (list(dataset_dir.glob("*.png")) for dataset_dir in dataset_dirs)
+    img_fps = sum(img_fps, [])  # un-nestle list
     for i, img_fp in enumerate(img_fps):
-        if 1 % 10 == 0:
+        if 1 % 100 == 0:
             print(f"\t{i+1}/{len(img_fps)}")
         x, y = Image.open(img_fp).size
         pad_max = max((pad_max, x, y))
+
+    print(f"padding parameter: {pad_max}")
 
     bg_color = (244,244,244)
     resize_to = (512, 512)
