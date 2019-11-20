@@ -17,8 +17,8 @@ class img_data_type:
 def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "train_test_valid_split",
-        help="train, test, validation split; formatted as comma-delimited string, e.g.; 0.5,0.3,0.2",
+        "train_test_split",
+        help="train, test, validation split; formatted as comma-delimited string, e.g.; 0.5,0.5",
         type=lambda s: [float(ss) for ss in s.split(",")]
     )
     parser.add_argument(
@@ -35,22 +35,20 @@ def cli():
 def main(train_test_valid_split: Tuple[float,float,float],
          histology_dir: Path,
          outdir: Path):
-    train_prop, test_prop, valid_prop = train_test_valid_split
+    train_prop, test_prop = train_test_valid_split
     train_dir = outdir/"train"
     test_dir = outdir/"test"
     valid_dir = outdir/"valid"
     [p.mkdir(exist_ok=True, parents=True) for p in (train_dir, test_dir, valid_dir)]
     
     weighted = [img_data_type.train] * int(train_prop * 10000) \
-             + [img_data_type.test]  * int(test_prop  * 10000) \
-             + [img_data_type.valid] * int(valid_prop * 10000)
+             + [img_data_type.test]  * int(test_prop  * 10000)
 
     for img_fp in list(histology_dir.glob("*.png")):
         d_type = random.choice(weighted)
         c_outdir = {
             img_data_type.train: train_dir,
             img_data_type.test: test_dir,
-            img_data_type.valid: valid_dir,
         }[d_type]
         img_fp.replace(c_outdir/img_fp.name)
 

@@ -45,7 +45,7 @@ split:
 	# data needs to be split into training, validation and
 	# testing; test set will be used for survival analysis
 	$(PY) ./scripts/preprocessing/split_data.py \
-		'0.33,0.33,0.33' \
+		'0.5,0.5' \
 		-i $(CONVERTED_PNG_IMAGES_DIR) \
 		-o $(SPLIT_DATA_DIR) \
 		
@@ -55,7 +55,6 @@ autoencoder:
 	$(PY) ./scripts/analysis/autoencoder.py \
 		--train-dir $(SPLIT_DATA_DIR)/train \
 		--test-dir $(SPLIT_DATA_DIR)/test \
-		--valid-dir $(SPLIT_DATA_DIR)/valid \
 		--epochs $(N_EPOCHS) \
 		-o $(LATENT_ENCODINGS_FP)
 

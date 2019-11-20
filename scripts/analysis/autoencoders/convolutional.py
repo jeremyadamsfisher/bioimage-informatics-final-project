@@ -42,13 +42,12 @@ class HistologyDataset(torch.utils.data.Dataset):
 def load_dataset(train_dir, test_dir, valid_dir, preprocess_callable):
     datasets = {}
     for data_type, data_path in [("train", train_dir),
-                                 ("test",  test_dir),
-                                 ("valid", valid_dir)]:
+                                 ("test",  test_dir)]:
         datasets[data_type] = DataLoader(
             HistologyDataset(data_path, preprocess_callable),
             batch_size=1
         )
-    return datasets["train"], datasets["test"], datasets["valid"]
+    return datasets["train"], datasets["test"]
     
     
 def train(model, device, iterator, optimizer, criterion):
@@ -125,8 +124,8 @@ class Autoencoder(torch.nn.Module):
         return x, x_latent
 
 
-def train_model(train_dir, test_dir, valid_dir, epochs, preprocess_callable):
-    train_iterator, test_iterator, valid_iterator = load_dataset(train_dir, test_dir, valid_dir, preprocess_callable)        
+def train_model(train_dir, test_dir, epochs, preprocess_callable):
+    train_iterator, test_iterator = load_dataset(train_dir, test_dir, preprocess_callable)        
                         
     print("Initializing model")
     model = Autoencoder().to(device)
@@ -149,8 +148,7 @@ def train_model(train_dir, test_dir, valid_dir, epochs, preprocess_callable):
     for epoch in range(epochs):
         print(f"starting epoch {epoch+1}...")
         train_loss = train(model, device, train_iterator, optimizer, criterion)
-        valid_loss = evaluate(model, device, valid_iterator, criterion)
-        print(f"| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Val. Loss: {valid_loss:.3f} |")
+        print(f"| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} |")
         
     # save model for later if desired
     torch.save(model.state_dict(), MODEL_SAVE_PATH)

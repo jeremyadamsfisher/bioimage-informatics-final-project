@@ -22,7 +22,9 @@ def cli():
     args = parser.parse_args().__dict__
     return args
 
-def determine_preprocessing(dataset_dirs: List[Path]):
+def determine_preprocessing(dataset_dirs: List[Path],
+                            bg_color=(244,244,244),
+                            resize_to=(512, 512)):
     """to maintain scale, we pad the smaller images based
     on the whole dataset"""
     pad_max = float("-inf")
@@ -33,11 +35,7 @@ def determine_preprocessing(dataset_dirs: List[Path]):
             print(f"\t{i+1}/{len(img_fps)}")
         x, y = Image.open(img_fp).size
         pad_max = max((pad_max, x, y))
-
     print(f"padding parameter: {pad_max}")
-
-    bg_color = (244,244,244)
-    resize_to = (512, 512)
 
     def preprocess_histology_img(img) -> torch.Tensor:
         """regardless of the autoencoder, we preprocess images
@@ -45,19 +43,18 @@ def determine_preprocessing(dataset_dirs: List[Path]):
         height, width = img.size
         img = TF.pad(img, (pad_max - height,pad_max - width), fill=bg_color)
         img = TF.resize(img, resize_to)
-
         return TF.to_tensor(img)
 
     return preprocess_histology_img
 
-def main(train_dir: Path, test_dir: Path, valid_dir: Path, outfp: Path, epochs):
+def main(train_dir: Path, test_dir: Path, outfp: Path, epochs):
     print("Running a preprocessing scan...")
-    preprocessing = determine_preprocessing([train_dir, test_dir, valid_dir])
+    preprocessing = determine_preprocessing([train_dir, test_dir])
     print("...done")
 
     print("Training...")
     model, model_weights_fp, test_dataset = convolutional.train_model(
-        train_dir, test_dir, valid_dir, epochs, preprocessing
+        train_dir, test_dir, epochs, preprocessing
     )
     print("...done")
 
