@@ -27,7 +27,7 @@ pipeline: download_from_bucket split autoencoder superdataset survival
 download_and_convert_from_tcga:
 	# download from TCGA and convert SVS images into PNGs for ingest
 	# into PyTorch
-	$(PY) ./scripts/preprocessing/download.py \
+	$(PY) ./scripts/preprocessing/download_from_tcga.py \
 		--manifest-fp $(MANIFEST_FP) \
 		--bucket-name $(BUCKET_NAME_GLCOUD) \
 		--gcloud-credentials $(CREDENTIALS_GCLOUD)
