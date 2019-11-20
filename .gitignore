@@ -106,3 +106,4 @@ venv.bak/
 .DS_Store
 outdir
 models
+cred.json

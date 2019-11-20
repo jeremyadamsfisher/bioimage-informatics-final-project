@@ -5,7 +5,8 @@ PY=$(BIOIMAGE_PY_PATH)
 DOCKER_IMG_NAME=bioimage_informatics_final_project_runtime
 
 BUCKET_NAME_GLCOUD=grim-reaper-initial-dataset
-IMGS_PATH_GCP=gs://grim-reaper-initial-dataset/imgs.zip
+IMGS_PATH_GCP=gs://grim-reaper-initial-dataset/*.png
+CREDENTIALS_GCLOUD=cred.json
 
 MANIFEST_FP=gdc_manifest.2019-11-07.txt
 RAW_IMAGES_DIR=/Users/jeremyfisher/Downloads/TCGA_DATA/
@@ -19,27 +20,23 @@ N_EPOCHS=100
 default:
 	echo "run either preprocess or pipeline!"
 
-preprocess: download_and_convert_from_tcga upload_to_bucket
+preprocess: download_and_convert_from_tcga
 
-pipeline: download_from_bucket split autoencoder superdataset
+pipeline: download_from_bucket split autoencoder superdataset survival
 
 download_and_convert_from_tcga:
 	# download from TCGA and convert SVS images into PNGs for ingest
 	# into PyTorch
 	$(PY) ./scripts/preprocessing/download.py \
 		--manifest-fp $(MANIFEST_FP) \
-		--outdir $(CONVERTED_PNG_IMAGES_DIR)
+		--bucket-name $(BUCKET_NAME_GLCOUD) \
+		--gcloud-credentials $(CREDENTIALS_GCLOUD)
 
-upload_to_bucket:
-	zip -r imgs.zip $(CONVERTED_PNG_IMAGES_DIR) \
-	&& gsutil cp imgs.zip $(IMGS_PATH_GCP) \
-	&& rm rm *.zip
+clean:
+	rm -rf $(CONVERTED_PNG_IMAGES_DIR)
 
-download_from_bucket:
-	rm -rf $(CONVERTED_PNG_IMAGES_DIR) \
-	&& gsutil cp $(IMGS_PATH_GCP) . \
-	&& unzip -q *.zip \
-	&& rm *.zip
+download_from_bucket: clean
+	gsutil cp $(IMGS_PATH_GCP) $(CONVERTED_PNG_IMAGES_DIR)/ \
 
 split:
 	# data needs to be split into training, validation and
@@ -70,14 +67,3 @@ survival:
 	# survival analysis
 	$(PY) ./scripts/analysis/survival.py \
 		--dataset $(SUPER_DATASET_FP)
-
-build:
-	docker build -t $(DOCKER_IMG_NAME) .
-
-run: build
-	docker run \
-		-v $(PWD)/data:/data \
-		-v $(RAW_IMAGES_DIR):/raw \
-		$(DOCKER_IMG_NAME) make pipeline \
-			RAW_IMAGES_DIR=/raw \
-			BIOIMAGE_PY_PATH=/opt/conda/bin/python
