@@ -8,7 +8,7 @@ BUCKET_NAME_GLCOUD=grim-reaper-initial-dataset
 IMGS_PATH_GCP=gs://grim-reaper-initial-dataset/*.png
 CREDENTIALS_GCLOUD=cred.json
 
-MANIFEST_FP=gdc_manifest.2019-11-07.txt
+MANIFEST_FP=gdc_manifest.2019-11-20_GW-FFPE-MCD.txt
 RAW_IMAGES_DIR=/Users/jeremyfisher/Downloads/TCGA_DATA/
 CONVERTED_PNG_IMAGES_DIR=./outdir/converted_images/
 SPLIT_DATA_DIR=./outdir/split_data
