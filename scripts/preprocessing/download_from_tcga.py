@@ -89,6 +89,13 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
 
             print(f"\tConverting...")
             img = svs2scaled_PIL(img_fp, 32)
+
+            # check to see if aspect ratio is too crazy
+            x, y = sorted(img.size)
+            if x * 2 <= y:
+                print(f"rejected image {img_fp.name} with aspect ratio {x}/{y}")
+                continue
+
             img_fp_converted = opt.outdir/f"{img_fp.stem}.png"
             img.save(img_fp_converted)
 
