@@ -39,7 +39,7 @@ class HistologyDataset(torch.utils.data.Dataset):
         return self.preproc(Image.open(img_fp)), img_fp.name
 
 
-def load_dataset(train_dir, test_dir, valid_dir, preprocess_callable):
+def load_dataset(train_dir, test_dir, preprocess_callable):
     datasets = {}
     for data_type, data_path in [("train", train_dir),
                                  ("test",  test_dir)]:

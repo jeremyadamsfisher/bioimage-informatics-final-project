@@ -16,7 +16,6 @@ def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("--train-dir", type=Path, required=True)
     parser.add_argument("--test-dir", type=Path, required=True)
-    parser.add_argument("--valid-dir", type=Path, required=True)
     parser.add_argument("--epochs", help="number of epochs to train", type=int, default=100)
     parser.add_argument("-o", "--outfp", type=Path, required=True)
     args = parser.parse_args().__dict__
