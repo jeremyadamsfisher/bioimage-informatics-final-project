@@ -54,7 +54,7 @@ def svs2pil(slide_path, scale_factor):
 
 def determine_undownloaded_objects(manifest):
     """determine which SVS files have not been downloaded"""
-    fnames = {blob.name for blob in storage_client.list_blobs(opt.bucket_name)}
+    fnames = {blob.name.replace(".png", ".svs") for blob in storage_client.list_blobs(opt.bucket_name)}
     manifest_remaining = []
     for entry in manifest:
         if entry["filename"] not in fnames:
@@ -77,7 +77,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
     with tempfile.TemporaryDirectory() as t_dir:
         print(
             f"Downloading images ({(i*chunk_size)+1:,} to {((i+1)*chunk_size)+1:,}) "
-            f"of {len(manifest):,} to {t_dir}..."
+            f"of {len(manifest_remaining):,} to {t_dir}..."
         )
         subprocess.check_output([
             "gdc-client",
