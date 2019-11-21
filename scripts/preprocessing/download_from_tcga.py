@@ -61,7 +61,7 @@ def blacklist_img(img_fp: Path):
     else:
         with blacklist_fp.open() as f:
             blacklist = json.load(f)
-    blacklist.append(img_fp)
+    blacklist.append(img_fp.name)
     with blacklist_fp.open("w") as f_out:
         json.dump(blacklist, f_out)
 
