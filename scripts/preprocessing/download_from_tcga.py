@@ -54,8 +54,8 @@ def svs2pil(slide_path, scale_factor):
     return img
 
 
-def blacklist_img(img_fp):
-    img_fp = img_fp.replace(".png", ".svs")
+def blacklist_img(img_fp: Path):
+    img_fp = img_fp.with_suffix(".svs")
     if not blacklist_fp.exists():
         blacklist = []
     else:
