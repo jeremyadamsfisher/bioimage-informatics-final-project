@@ -7,8 +7,8 @@ IMGS_PATH_GCP=gs://$(BUCKET_NAME_GLCOUD)/*.png
 CREDENTIALS_GCLOUD=cred.json
 
 MANIFEST_FP=gdc_manifest.2019-11-20_GW-FFPE-MCD.txt
-INTERMEDIARY_DIR=./intermediary
-CONVERTED_PNG_IMAGES_DIR=$(INTERMEDIARY_DIR)/converted_images
+INTERMEDIARY_DIR=intermediary
+CONVERTED_PNG_IMAGES_DIR=$(INTERMEDIARY_DIR)/converted_images/
 SPLIT_DATA_DIR=$(INTERMEDIARY_DIR)/split_data
 LATENT_ENCODINGS_FP=$(INTERMEDIARY_DIR)/image_encodings.csv
 IMAGE_METADATA=./data/histology_image_annotations.csv
@@ -31,7 +31,8 @@ download_and_convert_from_tcga:
 		--gcloud-credentials $(CREDENTIALS_GCLOUD)
 
 download_from_bucket:
-	gsutil cp $(IMGS_PATH_GCP) $(CONVERTED_PNG_IMAGES_DIR)/ \
+	mkdir -p $(CONVERTED_PNG_IMAGES_DIR) \
+	&& gsutil -m cp "$(IMGS_PATH_GCP)" $(CONVERTED_PNG_IMAGES_DIR)
 
 split:
 	# data needs to be split into training, validation and

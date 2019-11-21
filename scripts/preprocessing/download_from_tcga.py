@@ -8,6 +8,7 @@ import itertools
 import PIL
 import openslide
 import math
+import json
 
 from pathlib import Path
 from google.cloud import storage
