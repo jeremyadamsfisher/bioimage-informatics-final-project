@@ -32,14 +32,12 @@ def cli():
     args = parser.parse_args().__dict__
     return args
 
-def main(train_test_valid_split: Tuple[float,float,float],
+def main(train_test_split: Tuple[float,float,float],
          histology_dir: Path,
          outdir: Path):
-    train_prop, test_prop = train_test_valid_split
-    train_dir = outdir/"train"
-    test_dir = outdir/"test"
-    valid_dir = outdir/"valid"
-    [p.mkdir(exist_ok=True, parents=True) for p in (train_dir, test_dir, valid_dir)]
+    train_prop, test_prop = train_test_split
+    train_dir = outdir/"train"; train_dir.mkdir(exist_ok=True, parents=True)
+    test_dir = outdir/"test"; test_dir.mkdir(exist_ok=True, parents=True)
     
     weighted = [img_data_type.train] * int(train_prop * 10000) \
              + [img_data_type.test]  * int(test_prop  * 10000)
