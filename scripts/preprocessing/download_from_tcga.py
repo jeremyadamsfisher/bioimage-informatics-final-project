@@ -22,6 +22,8 @@ opt = parser.parse_args()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = opt.gcloud_credentials
 storage_client = storage.Client()
 
+blacklist_fp = Path("blacklist.json")
+
 def chunks(iterable, size):
     """https://stackoverflow.com/questions/434287/what-is-the-most-pythonic-way-to-iterate-over-a-list-in-chunks#434328"""
     it = iter(iterable)
@@ -52,12 +54,29 @@ def svs2pil(slide_path, scale_factor):
     return img
 
 
+def blacklist_img(img_fp):
+    img_fp = img_fp.replace(".png", ".svs")
+    if not blacklist_fp.exists():
+        blacklist = []
+    else:
+        with blacklist_fp.open() as f:
+            blacklist = json.load(f)
+    blacklist.append(img_fp)
+    with blacklist_fp.open("w") as f_out:
+        json.dump(blacklist, f_out)
+
 def determine_undownloaded_objects(manifest):
     """determine which SVS files have not been downloaded"""
-    fnames = {blob.name.replace(".png", ".svs") for blob in storage_client.list_blobs(opt.bucket_name)}
+    previously_downloaded_fnames = {blob.name.replace(".png", ".svs") for blob in storage_client.list_blobs(opt.bucket_name)}
+    if blacklist_fp.exists():
+        with blacklist_fp.open() as f:
+            blacklist = json.load(f)
+    else:
+        blacklist = []
     manifest_remaining = []
     for entry in manifest:
-        if entry["filename"] not in fnames:
+        if entry["filename"] not in previously_downloaded_fnames \
+            and entry["filename"] not in blacklist:
             manifest_remaining.append(entry)
     return manifest_remaining
 
@@ -93,6 +112,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             # check to see if magnification = 40
             slide_properties = dict(openslide.open_slide(str(img_fp)).properties)
             if int(slide_properties['aperio.AppMag']) != 40:
+                blacklist_img(img_fp)
                 print(f"rejected image {img_fp.name} with magnification {int(slide_properties['aperio.AppMag'])}")
                 continue
 
@@ -101,6 +121,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             # check to see if aspect ratio is too crazy
             x, y = sorted(img.size)
             if x * 2 <= y:
+                blacklist_img(img_fp)
                 print(f"rejected image {img_fp.name} with aspect ratio {x}/{y}")
                 continue
 
