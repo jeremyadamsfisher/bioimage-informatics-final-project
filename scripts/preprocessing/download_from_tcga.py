@@ -71,7 +71,7 @@ with open(opt.manifest_fp) as f:
 
 manifest_remaining = determine_undownloaded_objects(manifest)
 
-chunk_size = 5
+chunk_size = 2
 for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
     with tempfile.TemporaryDirectory() as t_dir:
         print(
@@ -96,7 +96,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
                 print(f"rejected image {img_fp.name} with aspect ratio {x}/{y}")
                 continue
 
-            img_fp_converted = opt.outdir/f"{img_fp.stem}.png"
+            img_fp_converted = Path(t_dir)/f"{img_fp.stem}.png"
             img.save(img_fp_converted)
 
             print(f"\tUploading...")
