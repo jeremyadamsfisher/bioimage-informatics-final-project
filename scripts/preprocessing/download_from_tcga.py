@@ -88,6 +88,13 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             print(f"({i}/{len(new_images)})")
 
             print(f"\tConverting...")
+
+            # check to see if magnification = 40
+            slide_properties = dict(openslide.open_slide(str(img_fp)).properties)
+            if int(slide_properties['aperio.AppMag']) != 40
+                print(f"rejected image {img_fp.name} with magnification {int(slide_properties['aperio.AppMag'])}")
+                continue
+
             img = svs2pil(img_fp, 32)
 
             # check to see if aspect ratio is too crazy
