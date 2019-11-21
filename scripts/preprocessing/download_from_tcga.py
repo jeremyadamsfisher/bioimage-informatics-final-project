@@ -30,7 +30,7 @@ def chunks(iterable, size):
         chunk = tuple(itertools.islice(it,size))
 
 
-def svs2png(slide_path, scale_factor):
+def svs2pil(slide_path, scale_factor):
     """Convert a WSI training slide to a scaled-down PIL image.
     Args:
       slide_path: The slide number.
@@ -88,7 +88,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             print(f"({i}/{len(new_images)})")
 
             print(f"\tConverting...")
-            img = svs2scaled_PIL(img_fp, 32)
+            img = svs2pil(img_fp, 32)
 
             # check to see if aspect ratio is too crazy
             x, y = sorted(img.size)
