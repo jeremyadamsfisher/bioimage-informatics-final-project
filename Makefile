@@ -2,20 +2,18 @@
 
 PY=$(BIOIMAGE_PY_PATH)
 
-DOCKER_IMG_NAME=bioimage_informatics_final_project_runtime
-
 BUCKET_NAME_GLCOUD=grim-reaper-initial-dataset
-IMGS_PATH_GCP=gs://grim-reaper-initial-dataset/*.png
+IMGS_PATH_GCP=gs://$(BUCKET_NAME_GLCOUD)/*.png
 CREDENTIALS_GCLOUD=cred.json
 
 MANIFEST_FP=gdc_manifest.2019-11-20_GW-FFPE-MCD.txt
-RAW_IMAGES_DIR=/Users/jeremyfisher/Downloads/TCGA_DATA/
-CONVERTED_PNG_IMAGES_DIR=./outdir/converted_images/
-SPLIT_DATA_DIR=./outdir/split_data
-LATENT_ENCODINGS_FP=./outdir/image_encodings.csv
+INTERMEDIARY_DIR=./intermediary
+CONVERTED_PNG_IMAGES_DIR=$(INTERMEDIARY_DIR)/converted_images
+SPLIT_DATA_DIR=$(INTERMEDIARY_DIR)/split_data
+LATENT_ENCODINGS_FP=$(INTERMEDIARY_DIR)/image_encodings.csv
 IMAGE_METADATA=./data/histology_image_annotations.csv
-SUPER_DATASET_FP=./outdir/dataset.csv
-N_EPOCHS=100
+SUPER_DATASET_FP=./data/dataset.csv
+N_EPOCHS=5
 
 default:
 	echo "run either preprocess or pipeline!"
@@ -32,10 +30,7 @@ download_and_convert_from_tcga:
 		--bucket-name $(BUCKET_NAME_GLCOUD) \
 		--gcloud-credentials $(CREDENTIALS_GCLOUD)
 
-clean:
-	rm -rf $(CONVERTED_PNG_IMAGES_DIR)
-
-download_from_bucket: clean
+download_from_bucket:
 	gsutil cp $(IMGS_PATH_GCP) $(CONVERTED_PNG_IMAGES_DIR)/ \
 
 split:
