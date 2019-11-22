@@ -41,7 +41,7 @@ def gdc_client_download(img_ids, t_dir):
             "gdc-client",
             "download",
             *img_ids
-        ], cwd=t_dir, stdout=subprocess.DEVNULL)
+        ], cwd=t_dir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         return gdc_client_download(img_ids)
     else:
