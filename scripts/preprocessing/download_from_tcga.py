@@ -106,7 +106,7 @@ with open(opt.manifest_fp) as f:
 
 manifest_remaining = determine_undownloaded_objects(manifest)
 
-chunk_size = 2
+chunk_size = 5
 for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
     with tempfile.TemporaryDirectory() as t_dir:
         print(
