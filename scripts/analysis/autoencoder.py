@@ -5,8 +5,11 @@ sys.path.append(os.path.join(os.getcwd(), "scripts", "analysis"))
 
 import argparse
 import csv
+import ast
 import torch
+import random
 import torchvision.transforms.functional as TF
+import torchvision.transforms as transforms
 from pathlib import Path
 from PIL import Image
 
@@ -14,6 +17,7 @@ from autoencoders import convolutional
 
 def cli():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--img-size-max", type=int, required=True)
     parser.add_argument("--train-dir", type=Path, required=True)
     parser.add_argument("--test-dir", type=Path, required=True)
     parser.add_argument("--epochs", help="number of epochs to train", type=int, default=100)
@@ -21,39 +25,41 @@ def cli():
     args = parser.parse_args().__dict__
     return args
 
-def determine_preprocessing(dataset_dirs: List[Path],
-                            bg_color=(244,244,244),
-                            resize_to=(512, 512)):
-    """to maintain scale, we pad the smaller images based
-    on the whole dataset"""
-    pad_max = float("-inf")
-    img_fps = (list(dataset_dir.glob("*.png")) for dataset_dir in dataset_dirs)
-    img_fps = sum(img_fps, [])  # un-nestle list
-    for i, img_fp in enumerate(img_fps):
-        if 1 % 100 == 0:
-            print(f"\t{i+1}/{len(img_fps)}")
-        x, y = Image.open(img_fp).size
-        pad_max = max((pad_max, x, y))
-    print(f"padding parameter: {pad_max}")
+# preprocessing constants
+
+def gen_preprocessing_callable(img_size_max):
+    """clojure to store dataset specific preprocessing stuff"""
+
+    tsfms = transforms.Compose([
+        transforms.Grayscale(),
+        transforms.RandomHorizontalFlip(0.5),
+        transforms.RandomVerticalFlip(0.5),
+        transforms.ToTensor(),
+    ])
+    bg_color = (244,244,244)
+    resize_to = (1024, 1024)
 
     def preprocess_histology_img(img) -> torch.Tensor:
         """regardless of the autoencoder, we preprocess images
         the same way"""
-        height, width = img.size
-        img = TF.pad(img, (pad_max - height,pad_max - width), fill=bg_color)
-        img = TF.resize(img, resize_to)
-        return TF.to_tensor(img)
 
+        height, width = img.size
+        
+        img = img.rotate(random.randint(0,180), fillcolor=bg_color)
+        img_padded = Image.new(img.mode, (img_size_max, img_size_max), bg_color)
+        img_padded.paste(img, (1500-height//2, 1500-width//2))
+        img_padded.thumbnail(resize_to, Image.ANTIALIAS)
+
+        return tsfms(img_padded)
+    
     return preprocess_histology_img
 
-def main(train_dir: Path, test_dir: Path, outfp: Path, epochs):
-    print("Running a preprocessing scan...")
-    preprocessing = determine_preprocessing([train_dir, test_dir])
-    print("...done")
+def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int):
+    preprocess_histology_img = gen_preprocessing_callable(img_size_max)
 
     print("Training...")
     model, model_weights_fp, test_dataset = convolutional.train_model(
-        train_dir, test_dir, epochs, preprocessing
+        train_dir, test_dir, epochs, preprocess_histology_img
     )
     print("...done")
 
@@ -61,8 +67,9 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs):
     latent_df = []
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for img, (img_fp, *_) in test_dataset:
-        x, x_latent = model(img.to(device))
-        x_latent = list(x_latent.cpu().detach().numpy())
+        with torch.no_grad():
+            x, x_latent = model(img.to(device))
+        x_latent = list(x_latent.cpu().numpy())
         latent_df.append({
             "img_fp": str(img_fp),
             **{f"l{i}": latent_dim for i, latent_dim in enumerate(x_latent)}

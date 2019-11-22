@@ -83,7 +83,7 @@ def evaluate(model, device, iterator, criterion):
 
 
 class Autoencoder(torch.nn.Module):
-    def __init__(self, layer_spec=((3, 8), (8, 3), (3, 1)), kern_size=5):
+    def __init__(self, layer_spec=((1, 16), (16, 32), (32, 8), (8, 1)), kern_size=5):
         super(Autoencoder, self).__init__()
 
         self.encoder_layers = []
@@ -92,13 +92,14 @@ class Autoencoder(torch.nn.Module):
             self.encoder_layers.append(
                 nn.Sequential(
                     nn.Conv2d(in_features, out_features, kern_size),
+                    nn.BatchNorm2d(out_features),
                     nn.ReLU()
                 )
             )
             self.decoder_layers.append(
                 nn.Sequential(
-                    torch.nn.ConvTranspose2d(out_features, in_features, kern_size),
-                    torch.nn.Sigmoid()
+                    nn.ConvTranspose2d(out_features, in_features, kern_size),
+                    nn.ReLU()
                 )
             )
 
