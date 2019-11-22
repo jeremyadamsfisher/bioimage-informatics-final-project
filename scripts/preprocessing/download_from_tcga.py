@@ -121,21 +121,13 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
 
             # check to see if magnification = 40
             slide_properties = dict(openslide.open_slide(str(img_fp)).properties)
-            if float(slide_properties['aperio.AppMag']) != 40:
+            if float(slide_properties.get("aperio.AppMag", 0)) != 40:
                 blacklist_img(img_fp)
                 print(f"rejected image {img_fp.name} with magnification {int(slide_properties['aperio.AppMag'])}")
                 img_fp.unlink()
                 continue
 
             img = svs2pil(img_fp, 32)
-
-            # check to see if aspect ratio is too crazy
-            x, y = sorted(img.size)
-            if x * 2 <= y:
-                blacklist_img(img_fp)
-                print(f"rejected image {img_fp.name} with aspect ratio {x}/{y}")
-                img_fp.unlink()
-                continue
 
             img_fp_converted = Path(t_dir)/f"{img_fp.stem}.png"
             img.save(img_fp_converted)
