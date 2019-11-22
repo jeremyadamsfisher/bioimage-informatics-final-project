@@ -9,6 +9,7 @@ import PIL
 import openslide
 import math
 import json
+import time
 
 from pathlib import Path
 from google.cloud import storage
@@ -31,6 +32,20 @@ def chunks(iterable, size):
     while chunk:
         yield chunk
         chunk = tuple(itertools.islice(it,size))
+
+
+def gdc_client_download(img_ids, t_dir):
+    """wrapper for gdc-client with some error handling"""
+    try:
+        subprocess.call([
+            "gdc-client",
+            "download",
+            *img_ids
+        ], cwd=t_dir, stdout=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        return gdc_client_download(img_ids)
+    else:
+        return list(Path(t_dir).glob("*/*.svs"))
 
 
 def svs2pil(slide_path, scale_factor):
@@ -98,12 +113,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             f"Downloading images ({(i*chunk_size)+1:,} to {((i+1)*chunk_size)+1:,}) "
             f"of {len(manifest_remaining):,} to {t_dir}..."
         )
-        subprocess.check_output([
-            "gdc-client",
-            "download",
-            *[img["id"] for img in imgs]
-        ], cwd=t_dir)
-        new_images = list(Path(t_dir).glob("*/*.svs"))
+        new_images = gdc_client_download([img["id"] for img in imgs], t_dir)
         for i, img_fp in enumerate(new_images):
             print(f"({i}/{len(new_images)})")
 
@@ -114,6 +124,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             if float(slide_properties['aperio.AppMag']) != 40:
                 blacklist_img(img_fp)
                 print(f"rejected image {img_fp.name} with magnification {int(slide_properties['aperio.AppMag'])}")
+                img_fp.unlink()
                 continue
 
             img = svs2pil(img_fp, 32)
@@ -123,6 +134,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             if x * 2 <= y:
                 blacklist_img(img_fp)
                 print(f"rejected image {img_fp.name} with aspect ratio {x}/{y}")
+                img_fp.unlink()
                 continue
 
             img_fp_converted = Path(t_dir)/f"{img_fp.stem}.png"

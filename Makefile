@@ -15,12 +15,15 @@ IMAGE_METADATA=./data/histology_image_annotations.csv
 SUPER_DATASET_FP=./data/dataset.csv
 N_EPOCHS=5
 
+IMG_SIZE_MIN=1000
+IMG_SIZE_MAX=3000
+
 default:
 	echo "run either preprocess or pipeline!"
 
 preprocess: download_and_convert_from_tcga
 
-pipeline: download_from_bucket split autoencoder superdataset survival
+pipeline: download_from_bucket filter_unacceptable_imgs split autoencoder superdataset survival
 
 download_and_convert_from_tcga:
 	# download from TCGA and convert SVS images into PNGs for ingest
@@ -33,6 +36,13 @@ download_and_convert_from_tcga:
 download_from_bucket:
 	mkdir -p $(CONVERTED_PNG_IMAGES_DIR) \
 	&& gsutil -m cp "$(IMGS_PATH_GCP)" $(CONVERTED_PNG_IMAGES_DIR)
+
+filter_unacceptable_imgs:
+	$(PY) ./scripts/preprocessing/exclude.py \
+		--min-x $(IMG_SIZE_MIN) --max-x $(IMG_SIZE_MAX) \
+		--min-y $(IMG_SIZE_MIN) --max-y $(IMG_SIZE_MAX) \
+		--img-dir $(CONVERTED_PNG_IMAGES_DIR) \
+		--excluded-img-dir $(INTERMEDIARY_DIR)/excluded
 
 split:
 	# data needs to be split into training, validation and
@@ -49,6 +59,7 @@ autoencoder:
 		--train-dir $(SPLIT_DATA_DIR)/train \
 		--test-dir $(SPLIT_DATA_DIR)/test \
 		--epochs $(N_EPOCHS) \
+		--img-size-max $(IMG_SIZE_MAX) \
 		-o $(LATENT_ENCODINGS_FP)
 
 superdataset:
