@@ -18,6 +18,8 @@ N_EPOCHS=25
 IMG_SIZE_MIN=0
 IMG_SIZE_MAX=5000
 
+TRAIN_TEST_SPLIT="0.75,0.25"
+
 default:
 	echo "run either preprocess or pipeline!"
 
@@ -48,7 +50,7 @@ split:
 	# data needs to be split into training, validation and
 	# testing; test set will be used for survival analysis
 	$(PY) ./scripts/preprocessing/split_data.py \
-		'0.5,0.5' \
+		$(TRAIN_TEST_SPLIT) \
 		-i $(CONVERTED_PNG_IMAGES_DIR) \
 		-o $(SPLIT_DATA_DIR) \
 		
