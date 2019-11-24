@@ -1,5 +1,3 @@
-"""adapted from FCN8s layers: https://github.com/wkentaro/pytorch-fcn/blob/master/torchfcn/models/fcn8s.py"""
-
 import torch.nn as nn
 from collections import deque
 

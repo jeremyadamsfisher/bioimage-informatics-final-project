@@ -99,7 +99,7 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
     model_outdir = Path("models")
     model_outdir.mkdir(exist_ok=True)
 
-    model = autoencoder2.Autoencoder().to(device)
+    model = autoencoder1.Autoencoder().to(device)
 
     print("Training...")
     model = train_model(model, train_dataset, epochs)
