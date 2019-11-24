@@ -57,7 +57,7 @@ split:
 autoencoder:
 	# find latent representation space, extract latent encodings
 	# from test dataset
-	$(PY) ./scripts/analysis/train_fit_autoencoder.py \
+	$(PY) ./scripts/analysis/train_predict_autoencoder.py \
 		--train-dir $(SPLIT_DATA_DIR)/train \
 		--test-dir $(SPLIT_DATA_DIR)/test \
 		--epochs $(N_EPOCHS) \
