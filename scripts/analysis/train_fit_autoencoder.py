@@ -99,6 +99,7 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
 
     print("Training...")
     model = train_model(model, train_dataset, epochs)
+    torch.save(model.state_dict(), outfp/"autoencoder1.pth")
     print("...done")
 
     print("Running inference")
