@@ -20,6 +20,9 @@ def main(img_data_fp, latent_rep_fp, out_df_fp):
         pd.read_csv(latent_rep_fp)
         .assign(prefix=lambda _df: _df.img_fp.apply(lambda s: s[:12]))
     )
+    data_ids = set(df_annot.prefix)
+    missing_latent_data_ids = [prefix for prefix in df.prefix if prefix in data_ids]
+    print(missing_latent_data_ids)
     df = df_annot.merge(df_latent, on="prefix")
     df.to_csv(out_df_fp)
     

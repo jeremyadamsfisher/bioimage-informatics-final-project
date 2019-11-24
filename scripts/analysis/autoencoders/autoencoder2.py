@@ -45,11 +45,8 @@ class Autoencoder(nn.Module):
     def forward(self, x):
         for encoder_layer in self.encoder_layers:
             x = encoder_layer(x)
-            
         x_latent = self.final_conv(x)
         x = self.first_deconv(x_latent)
-
         for decoder_layer in self.decoder_layers:
-            x = self.unpooler(x)
             x = decoder_layer(x)
         return x, x_latent
