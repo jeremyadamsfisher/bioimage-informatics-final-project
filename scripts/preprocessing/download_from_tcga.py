@@ -123,7 +123,7 @@ for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
             slide_properties = dict(openslide.open_slide(str(img_fp)).properties)
             if float(slide_properties.get("aperio.AppMag", 0)) != 40:
                 blacklist_img(img_fp)
-                print(f"rejected image {img_fp.name} with magnification {int(slide_properties['aperio.AppMag'])}")
+                print(f"rejected image {img_fp.name} with magnification: {slide_properties.get('aperio.AppMag', 'unknown')}")
                 img_fp.unlink()
                 continue
 
