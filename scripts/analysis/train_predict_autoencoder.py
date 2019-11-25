@@ -64,7 +64,7 @@ class HistologyDataset(torch.utils.data.Dataset):
         img_padded.paste(img, (1500-height//2, 1500-width//2))
         img_padded.thumbnail(self.resize_to, Image.ANTIALIAS)
 
-        return self.tsfms(img_padded), str(img_fp)
+        return self.tsfms(img_padded), img_fp.name
 
 
 def train_model(model, train_iterator, epochs):
@@ -110,11 +110,12 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
     model.eval()
     latent_df = []
     for img, img_fp in test_dataset:
+        img_fp = img_fp[0]
         with torch.no_grad():
             x, x_latent = model(img.to(device))
         x_latent = list(x_latent.cpu().numpy())
         latent_df.append({
-            "img_fp": img_fp.name,
+            "img_fp": img_fp,
             **{f"l{i}": latent_dim for i, latent_dim in enumerate(x_latent)}
         })
     with open(outfp, "w") as f:
