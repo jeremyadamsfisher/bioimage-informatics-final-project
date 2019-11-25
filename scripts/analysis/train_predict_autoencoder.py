@@ -114,7 +114,7 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
             x, x_latent = model(img.to(device))
         x_latent = list(x_latent.cpu().numpy())
         latent_df.append({
-            "img_fp": str(img_fp),
+            "img_fp": img_fp.name,
             **{f"l{i}": latent_dim for i, latent_dim in enumerate(x_latent)}
         })
     with open(outfp, "w") as f:
