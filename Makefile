@@ -13,7 +13,7 @@ SPLIT_DATA_DIR=$(INTERMEDIARY_DIR)/split_data
 LATENT_ENCODINGS_FP=$(INTERMEDIARY_DIR)/image_encodings.csv
 IMAGE_METADATA=./data/histology_image_annotations.csv
 SUPER_DATASET_FP=./data/dataset.csv
-N_EPOCHS=5
+N_EPOCHS=3
 
 IMG_SIZE_MIN=0
 IMG_SIZE_MAX=5000
