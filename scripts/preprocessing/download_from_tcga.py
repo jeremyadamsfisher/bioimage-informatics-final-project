@@ -110,7 +110,7 @@ chunk_size = 5
 for i, imgs in enumerate(chunks(manifest_remaining, chunk_size)):
     with tempfile.TemporaryDirectory() as t_dir:
         print(
-            f"Downloading images ({(i*chunk_size)+1:,} to {((i+1)*chunk_size)+1:,}) "
+            f"Downloading images ({(i*chunk_size)+1:,} to {((i+1)*chunk_size):,}) "
             f"of {len(manifest_remaining):,} to {t_dir}..."
         )
         new_images = gdc_client_download([img["id"] for img in imgs], t_dir)
