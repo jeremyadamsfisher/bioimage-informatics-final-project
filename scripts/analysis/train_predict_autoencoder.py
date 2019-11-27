@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from pathlib import Path
 from PIL import Image
 
-from autoencoders import autoencoder1, autoencoder2
+from autoencoders import autoencoder1, autoencoder2, autoencoder3
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -99,7 +99,7 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
     model_outdir = Path("models")
     model_outdir.mkdir(exist_ok=True)
 
-    model = autoencoder1.Autoencoder().to(device)
+    model = autoencoder3.Autoencoder(512).to(device)
 
     print("Training...")
     model = train_model(model, train_dataset, epochs)

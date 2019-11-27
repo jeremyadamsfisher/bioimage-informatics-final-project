@@ -9,17 +9,14 @@ class Autoencoder(nn.Module):
         self.n_latent_dimensions = n_latent_dimensions
 
         layer_spec = [
-            [(1,64), (64, 64)],  # 1024 -> 512
-            [(64,128), (128, 128)],  # 512 -> 256
-            [(128, 256), (256,256)],  # 256 -> 128
-            [(256,256), (256,256)],  # 128 -> 64
-            [(256, 512), (512,512)],  # 64 -> 32
-            [(512,512), (512,512)],  # 32 -> 16
-            [(512, 512), (512,512)],  # 16 -> 8
-            [(512, 512), (512,512)],  # 8 -> 4
+            [(1,64), (64, 64)],  # 1024 -> 256
+            [(64,128), (128, 128)],  # 256 -> 64
+            [(128, 256), (256,256)],  # 64 -> 16
+            [(256,256), (256,256)],  # 4 -> 1
+            [(256,512), (512,512)],  # ???
         ]
 
-        self.encoder_layers = list()
+        self.encoder_layers = deque()
         self.decoder_layers = deque()
 
         for block in layer_spec:
@@ -37,8 +34,8 @@ class Autoencoder(nn.Module):
             self.encoder_layers.append(None)
             self.decoder_layers.appendleft(None)
 
-        self.pooler   = nn.MaxPool2d(2, stride=2, return_indices=True)
-        self.unpooler = nn.MaxUnpool2d(2, stride=2)
+        self.pooler   = nn.MaxPool2d(4, stride=4, return_indices=True)
+        self.unpooler = nn.MaxUnpool2d(4, stride=4)
 
         self.to_bottleneck   = nn.ConvTranspose2d(512, self.n_latent_dimensions, 5, padding=2)
         self.from_bottleneck = nn.ConvTranspose2d(self.n_latent_dimensions, 512, 5, padding=2)
@@ -50,16 +47,21 @@ class Autoencoder(nn.Module):
     def forward(self, x):
         idxs = []
         for encoder_layer in self.encoder_layers:
+            print(f"x size (encoding): {x.size()}")
             if encoder_layer:
                 x = encoder_layer(x)
             else:
                 x, idx = self.pooler(x)
                 idxs.append(idx)
 
+        print(f"x size (pre-latent): {x.size()}")
         x_latent = self.to_bottleneck(x)
+        print(f"x size (latent): {x_latent.size()}")
         x = self.from_bottleneck(x_latent)
-
+        print(f"x size (post-latent): {x.size()}")
+        
         for decoder_layer in self.decoder_layers:
+            print(f"x size (decoding): {x.size()}")
             if decoder_layer:
                 x = decoder_layer(x)
             else:
