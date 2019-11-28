@@ -34,9 +34,6 @@ class Autoencoder(nn.Module):
         self.pooler   = nn.MaxPool2d(8, stride=8, return_indices=True)
         self.unpooler = nn.MaxUnpool2d(8, stride=8)
 
-        self.to_bottleneck   = nn.ConvTranspose2d(64, self.n_latent_dimensions, 5, padding=2)
-        self.from_bottleneck = nn.ConvTranspose2d(self.n_latent_dimensions, 64, 5, padding=2)
-
         self.nn_layers = nn.ModuleList()
         self.nn_layers.extend(self.encoder_layers)
         self.nn_layers.extend(self.decoder_layers)
@@ -50,8 +47,7 @@ class Autoencoder(nn.Module):
                 x, idx = self.pooler(x)
                 idxs.append(idx)
 
-        x_latent = self.to_bottleneck(x)
-        x = self.from_bottleneck(x_latent)
+        x_latent = x
         
         for decoder_layer in self.decoder_layers:
             if decoder_layer:
