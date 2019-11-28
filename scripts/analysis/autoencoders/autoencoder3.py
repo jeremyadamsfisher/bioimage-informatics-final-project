@@ -47,21 +47,16 @@ class Autoencoder(nn.Module):
     def forward(self, x):
         idxs = []
         for encoder_layer in self.encoder_layers:
-            print(f"x size (encoding): {x.size()}")
             if encoder_layer:
                 x = encoder_layer(x)
             else:
                 x, idx = self.pooler(x)
                 idxs.append(idx)
 
-        print(f"x size (pre-latent): {x.size()}")
         x_latent = self.to_bottleneck(x)
-        print(f"x size (latent): {x_latent.size()}")
         x = self.from_bottleneck(x_latent)
-        print(f"x size (post-latent): {x.size()}")
         
         for decoder_layer in self.decoder_layers:
-            print(f"x size (decoding): {x.size()}")
             if decoder_layer:
                 x = decoder_layer(x)
             else:
