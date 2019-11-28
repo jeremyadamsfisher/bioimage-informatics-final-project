@@ -9,11 +9,8 @@ class Autoencoder(nn.Module):
         self.n_latent_dimensions = n_latent_dimensions
 
         layer_spec = [
-            [(1,64), (64, 64)],  # 1024 -> 256
-            [(64,128), (128, 128)],  # 256 -> 64
-            [(128, 256), (256,256)],  # 64 -> 16
-            [(256,256), (256,256)],  # 4 -> 1
-            [(256,512), (512,512)],  # ???
+            [(1,64)],  # 1024 -> 128
+            [(64, 64)],  # 128 -> 16
         ]
 
         self.encoder_layers = deque()
@@ -22,23 +19,23 @@ class Autoencoder(nn.Module):
         for block in layer_spec:
             for in_features, out_features in block:
                 encoder_block = nn.Sequential(
-                    nn.Conv2d(in_features, out_features, 3, padding=1),
+                    nn.Conv2d(in_features, out_features, 5, padding=2),
                     nn.ReLU()
                 )
                 self.encoder_layers.append(encoder_block)
                 decoder_block = nn.Sequential(
-                    nn.ConvTranspose2d(out_features, in_features, 3, padding=1),
+                    nn.ConvTranspose2d(out_features, in_features, 5, padding=2),
                     nn.ReLU()
                 )
                 self.decoder_layers.appendleft(decoder_block)
             self.encoder_layers.append(None)
             self.decoder_layers.appendleft(None)
 
-        self.pooler   = nn.MaxPool2d(4, stride=4, return_indices=True)
-        self.unpooler = nn.MaxUnpool2d(4, stride=4)
+        self.pooler   = nn.MaxPool2d(8, stride=8, return_indices=True)
+        self.unpooler = nn.MaxUnpool2d(8, stride=8)
 
-        self.to_bottleneck   = nn.ConvTranspose2d(512, self.n_latent_dimensions, 5, padding=2)
-        self.from_bottleneck = nn.ConvTranspose2d(self.n_latent_dimensions, 512, 5, padding=2)
+        self.to_bottleneck   = nn.ConvTranspose2d(64, self.n_latent_dimensions, 5, padding=2)
+        self.from_bottleneck = nn.ConvTranspose2d(self.n_latent_dimensions, 64, 5, padding=2)
 
         self.nn_layers = nn.ModuleList()
         self.nn_layers.extend(self.encoder_layers)
