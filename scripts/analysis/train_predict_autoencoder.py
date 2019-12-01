@@ -5,6 +5,7 @@ sys.path.append(os.path.join(os.getcwd(), "scripts", "analysis"))
 
 import argparse
 import csv
+import json
 import random
 import torch
 import torch.nn as nn
@@ -75,6 +76,7 @@ def train_model(model, train_iterator, epochs):
         weight_decay=1e-5,
     )
     criterion = nn.MSELoss()
+    losses_all_epochs = [] 
     for epoch in range(epochs):
         model.train()
         losses = []
@@ -87,9 +89,10 @@ def train_model(model, train_iterator, epochs):
             optimizer.step()
             losses.append(loss.item())
         train_loss = sum(losses) / len(train_iterator)
+        losses_all_epochs.extend(losses)
         print(f"| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} |")
 
-    return model
+    return model, losses_all_epochs
 
 
 def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int):
@@ -102,9 +105,14 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
     model = autoencoder3.Autoencoder().to(device)
 
     print("Training...")
-    model = train_model(model, train_dataset, epochs)
-    torch.save(model.state_dict(), model_outdir/"autoencoder3.pth")
+    model, losses = train_model(model, train_dataset, epochs)
+    
     print("...done")
+    name = "autoencoder3"
+    torch.save(model.state_dict(), model_outdir/f"{name}.pth")
+    with open(model_outdir/f"{name}_loses.json", "wt") as f:
+        json.dump({"losses": losses, "model_name": name}, f)
+    print("...saved")
 
     print("Running inference")
     model.eval()
