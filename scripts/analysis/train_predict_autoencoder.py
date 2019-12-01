@@ -99,11 +99,11 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
     model_outdir = Path("models")
     model_outdir.mkdir(exist_ok=True)
 
-    model = autoencoder3.Autoencoder(512).to(device)
+    model = autoencoder3.Autoencoder().to(device)
 
     print("Training...")
     model = train_model(model, train_dataset, epochs)
-    torch.save(model.state_dict(), model_outdir/"autoencoder1.pth")
+    torch.save(model.state_dict(), model_outdir/"autoencoder3.pth")
     print("...done")
 
     print("Running inference")

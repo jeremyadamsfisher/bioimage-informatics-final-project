@@ -3,14 +3,12 @@ from collections import deque
 
 class Autoencoder(nn.Module):
 
-    def __init__(self, n_latent_dimensions):
+    def __init__(self):
         super(Autoencoder, self).__init__()
-
-        self.n_latent_dimensions = n_latent_dimensions
 
         layer_spec = [
             [(1,64)],  # 1024 -> 128
-            [(64, 64)],  # 128 -> 16
+            [(64, 128)],  # 128 -> 16
         ]
 
         self.encoder_layers = deque()
