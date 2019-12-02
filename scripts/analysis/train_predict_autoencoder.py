@@ -102,13 +102,13 @@ def main(train_dir: Path, test_dir: Path, outfp: Path, epochs, img_size_max: int
     model_outdir = Path("models")
     model_outdir.mkdir(exist_ok=True)
 
-    model = autoencoder3.Autoencoder().to(device)
+    model = autoencoder1.Autoencoder().to(device)
 
     print("Training...")
     model, losses = train_model(model, train_dataset, epochs)
     
     print("...done")
-    name = "autoencoder3"
+    name = "autoencoder1"
     torch.save(model.state_dict(), model_outdir/f"{name}.pth")
     with open(model_outdir/f"{name}_loses.json", "wt") as f:
         json.dump({"losses": losses, "model_name": name}, f)
