@@ -1,7 +1,10 @@
 import torch.nn as nn
 
 class Autoencoder(nn.Module):
-    def __init__(self, layer_spec=((1, 16), (16, 32), (32, 8)), kern_size=5):
+    def __init__(self, layer_spec=((1, 32),   # 1024x1024x1 -> 256x256x32
+                                   (32, 16),  # -> 64x64
+                                   (16, 8),   # -> 16x16x8
+                                   ), kern_size=5):
         super(Autoencoder, self).__init__()
 
         self.encoder_layers = []
