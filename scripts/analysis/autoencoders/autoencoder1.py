@@ -1,9 +1,9 @@
 import torch.nn as nn
 
 class Autoencoder(nn.Module):
-    def __init__(self, layer_spec=((1, 32),   # 1024x1024x1 -> 256x256x32
-                                   (32, 16),  # -> 64x64
-                                   (16, 8),   # -> 16x16x8
+    def __init__(self, layer_spec=((1, 64),   # 1024x1024x1 -> 128x128x32
+                                   (64, 32),  # -> 16x16x1
+                                   (32, 16),   # -> 2x2x32
                                    ), kern_size=5):
         super(Autoencoder, self).__init__()
 
@@ -12,19 +12,19 @@ class Autoencoder(nn.Module):
         for in_features, out_features in layer_spec:
             self.encoder_layers.append(
                 nn.Sequential(
-                    nn.Conv2d(in_features, out_features, kern_size, padding=2),
+                    nn.Conv2d(in_features, out_features, kern_size, padding=kern_size//2),
                     nn.ReLU()
                 )
             )
             self.decoder_layers.append(
                 nn.Sequential(
-                    nn.ConvTranspose2d(out_features, in_features, kern_size, padding=2),
+                    nn.ConvTranspose2d(out_features, in_features, kern_size, padding=kern_size//2),
                     nn.ReLU()
                 )
             )
 
-        self.pooler   = nn.MaxPool2d(4, stride=4, return_indices=True)
-        self.unpooler = nn.MaxUnpool2d(4, stride=4)
+        self.pooler   = nn.MaxPool2d(  8, stride=8, return_indices=True)
+        self.unpooler = nn.MaxUnpool2d(8, stride=8)
         
         self.nn_layers = nn.ModuleList()
         self.nn_layers.extend(self.encoder_layers)
