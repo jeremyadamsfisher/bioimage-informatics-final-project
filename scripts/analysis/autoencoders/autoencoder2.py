@@ -9,9 +9,7 @@ class Autoencoder(nn.Module):
         layer_spec = [
             [(1,64),    (64, 64)],    # 512 -> 256
             [(64,128),  (128, 128)],  # 256 -> 128
-            [(128,256), (256,256)],   # 128 -> 64
-            [(256,256), (256,256)],   # 64 -> 32
-            [(256,256), (256,256)],   # 32 -> 16
+            [(128,256), (256, 256)],  # 128 -> 64
         ]
 
         self.encoder_layers = list ()
@@ -35,7 +33,7 @@ class Autoencoder(nn.Module):
         self.pooler   = nn.MaxPool2d(2, stride=2, return_indices=True)
         self.unpooler = nn.MaxUnpool2d(2, stride=2)
 
-        n_latent_dimensions = 100
+        n_latent_dimensions = 1000
         self.final_conv = nn.Conv2d(256, n_latent_dimensions, 16)
         self.first_deconv = nn.ConvTranspose2d(n_latent_dimensions, 256, 16)
 
