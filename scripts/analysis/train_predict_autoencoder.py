@@ -37,7 +37,6 @@ class HistologyDataset(torch.utils.data.Dataset):
                        bg_color=(244, 244, 244),
                        resize_to=(1024, 1024),
                        tsfms=None):
-
         self.img_fps = list(Path(img_dir).glob("*.png"))
         self.max_image_size = max_image_size
         self.bg_color = bg_color

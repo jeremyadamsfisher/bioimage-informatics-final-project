@@ -14,7 +14,6 @@ class Autoencoder(nn.Module):
             [(256, 512), (512,512)],  # 64 -> 32
             [(512,512), (512,512)],  # 32 -> 16
             [(512, 512), (512,512)],  # 16 -> 8
-            [(512, 512), (512,512)],  # 8 -> 4
         ]
 
         self.encoder_layers = list()
@@ -38,9 +37,11 @@ class Autoencoder(nn.Module):
         self.pooler   = nn.MaxPool2d(2, stride=2, return_indices=True)
         self.unpooler = nn.MaxUnpool2d(2, stride=2)
 
-        n_latent_dimensions = 100
-        self.final_conv = nn.Conv2d(512, n_latent_dimensions, 4)
-        self.first_deconv = nn.ConvTranspose2d(n_latent_dimensions, 512, 4)
+        n_latent_dimensions = 10
+        self.final_conv = nn.Conv2d(512, n_latent_dimensions, 8)
+        self.first_deconv = nn.ConvTranspose2d(n_latent_dimensions, 512, 8)
+
+        self.output_layer = nn.Tanh()
 
         self.nn_layers = nn.ModuleList()
         self.nn_layers.extend(self.encoder_layers)
@@ -63,5 +64,7 @@ class Autoencoder(nn.Module):
                 x = decoder_layer(x)
             else:
                 x = self.unpooler(x, idxs.pop())
+
+        x = self.output_layer(x)
 
         return x, x_latent.view(-1)
