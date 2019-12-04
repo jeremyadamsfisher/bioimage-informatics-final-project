@@ -19,7 +19,7 @@ class Autoencoder(nn.Module):
         self.encoder_layers = list()
         self.decoder_layers = deque()
 
-        for block in layer_spec:
+        for i, block in enumerate(layer_spec):
             for in_features, out_features in block:
                 encoder_block = nn.Sequential(
                     nn.Conv2d(in_features, out_features, 3, padding=1),
@@ -28,7 +28,7 @@ class Autoencoder(nn.Module):
                 self.encoder_layers.append(encoder_block)
                 decoder_block = nn.Sequential(
                     nn.ConvTranspose2d(out_features, in_features, 3, padding=1),
-                    nn.ReLU()
+                    nn.Tanh() if i == 0 else nn.ReLU()
                 )
                 self.decoder_layers.appendleft(decoder_block)
             self.encoder_layers.append(None)
@@ -40,8 +40,6 @@ class Autoencoder(nn.Module):
         n_latent_dimensions = 10
         self.final_conv = nn.Conv2d(512, n_latent_dimensions, 8)
         self.first_deconv = nn.ConvTranspose2d(n_latent_dimensions, 512, 8)
-
-        self.output_layer = nn.Tanh()
 
         self.nn_layers = nn.ModuleList()
         self.nn_layers.extend(self.encoder_layers)
@@ -64,7 +62,5 @@ class Autoencoder(nn.Module):
                 x = decoder_layer(x)
             else:
                 x = self.unpooler(x, idxs.pop())
-
-        x = self.output_layer(x)
 
         return x, x_latent.view(-1)
