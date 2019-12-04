@@ -55,18 +55,11 @@ class Autoencoder(nn.Module):
             else:
                 x, idx = self.pooler(x)
                 idxs.append(idx)
-            print(x.shape)
-
         x_latent = self.final_conv(x)
-        print(f"latent rep = {x_latent.shape}")
         x = self.first_deconv(x_latent)
-        print(x.shape)
-
         for decoder_layer in self.decoder_layers:
             if decoder_layer:
                 x = decoder_layer(x)
             else:
                 x = self.unpooler(x, idxs.pop())
-            print(x.shape)
-
         return x, x_latent.view(-1)
