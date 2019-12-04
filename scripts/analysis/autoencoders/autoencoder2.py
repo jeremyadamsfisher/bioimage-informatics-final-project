@@ -7,28 +7,26 @@ class Autoencoder(nn.Module):
         super(Autoencoder, self).__init__()
 
         layer_spec = [
-            [(1,64), (64, 64)],  # 1024 -> 512
-            [(64,128), (128, 128)],  # 512 -> 256
-            [(128, 256), (256,256)],  # 256 -> 128
-            [(256,256), (256,256)],  # 128 -> 64
-            [(256, 512), (512,512)],  # 64 -> 32
-            [(512,512), (512,512)],  # 32 -> 16
-            [(512, 512), (512,512)],  # 16 -> 8
+            [(1,64),    (64, 64)],    # 512 -> 256
+            [(64,128),  (128, 128)],  # 256 -> 128
+            [(128,256), (256,256)],   # 128 -> 64
+            [(256,256), (256,256)],   # 64 -> 32
+            [(256,256), (256,256)],   # 32 -> 16
         ]
 
         self.encoder_layers = list()
         self.decoder_layers = deque()
 
         for i, block in enumerate(layer_spec):
-            for in_features, out_features in block:
+            for j, (in_features, out_features) in enumerate(block):
                 encoder_block = nn.Sequential(
-                    nn.Conv2d(in_features, out_features, 3, padding=1),
+                    nn.Conv2d(in_features, out_features, 5, padding=5//2),
                     nn.ReLU()
                 )
                 self.encoder_layers.append(encoder_block)
                 decoder_block = nn.Sequential(
-                    nn.ConvTranspose2d(out_features, in_features, 3, padding=1),
-                    nn.Tanh() if i == 0 else nn.ReLU()
+                    nn.ConvTranspose2d(out_features, in_features, 5, padding=5//2),
+                    nn.Tanh() if (i == j == 0) else nn.ReLU()
                 )
                 self.decoder_layers.appendleft(decoder_block)
             self.encoder_layers.append(None)
@@ -37,13 +35,17 @@ class Autoencoder(nn.Module):
         self.pooler   = nn.MaxPool2d(2, stride=2, return_indices=True)
         self.unpooler = nn.MaxUnpool2d(2, stride=2)
 
-        n_latent_dimensions = 10
-        self.final_conv = nn.Conv2d(512, n_latent_dimensions, 8)
-        self.first_deconv = nn.ConvTranspose2d(n_latent_dimensions, 512, 8)
+        n_latent_dimensions = 100
+        self.final_conv = nn.Conv2d(256, n_latent_dimensions, 16)
+        self.first_deconv = nn.ConvTranspose2d(n_latent_dimensions, 256, 16)
 
         self.nn_layers = nn.ModuleList()
         self.nn_layers.extend(self.encoder_layers)
         self.nn_layers.extend(self.decoder_layers)
+        self.nn_layers.extend([self.final_conv,
+                               self.first_deconv,
+                               self.pooler,
+                               self.unpooler])
 
     def forward(self, x):
         idxs = []
@@ -53,14 +55,18 @@ class Autoencoder(nn.Module):
             else:
                 x, idx = self.pooler(x)
                 idxs.append(idx)
+            print(x.shape)
 
         x_latent = self.final_conv(x)
+        print(f"latent rep = {x_latent.shape}")
         x = self.first_deconv(x_latent)
+        print(x.shape)
 
         for decoder_layer in self.decoder_layers:
             if decoder_layer:
                 x = decoder_layer(x)
             else:
                 x = self.unpooler(x, idxs.pop())
+            print(x.shape)
 
         return x, x_latent.view(-1)

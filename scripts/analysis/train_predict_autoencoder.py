@@ -35,7 +35,7 @@ class HistologyDataset(torch.utils.data.Dataset):
     def __init__(self, img_dir,
                        max_image_size=5000,
                        bg_color=(244, 244, 244),
-                       resize_to=(1024, 1024),
+                       resize_to=(512, 512),
                        tsfms=None):
         self.img_fps = list(Path(img_dir).glob("*.png"))
         self.max_image_size = max_image_size
