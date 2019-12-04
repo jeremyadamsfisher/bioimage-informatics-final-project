@@ -47,7 +47,7 @@ class HistologyDataset(torch.utils.data.Dataset):
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.RandomVerticalFlip(0.5),
                 transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                transforms.Normalize((0.5,), (0.5,)),
             ])
         else:
             self.tsfms = tsfms
