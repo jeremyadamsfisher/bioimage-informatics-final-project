@@ -14,7 +14,7 @@ class Autoencoder(nn.Module):
             [(256,256), (256,256)],   # 32 -> 16
         ]
 
-        self.encoder_layers = list()
+        self.encoder_layers = list ()
         self.decoder_layers = deque()
 
         for i, block in enumerate(layer_spec):
